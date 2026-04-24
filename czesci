@@ -1,1 +1,456 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Części – Le Magazynier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
 
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: #1c1c1c;
+      font-family: sans-serif;
+      color: #f5f5f5;
+    }
+
+    .form-wrapper {
+      max-width: 500px;
+      margin: auto;
+      background: #333;
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 90vh;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .logo {
+      font-family: 'Informal Roman', cursive;
+      font-size: 2.5rem;
+      color: #f9f9f9;
+    }
+
+    .back-button {
+      width: 25%;
+      min-width: 80px;
+      padding: 8px;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #555;
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 1rem;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background-color: #222;
+      color: #f5f5f5;
+    }
+
+    input::placeholder { color: #999; }
+
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 16px auto;
+    }
+
+    #scan-result {
+      text-align: center;
+      color: #00ff00;
+      margin-bottom: 12px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #666;
+    }
+
+    .code-text {
+      flex: 1;
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      border: 1px solid #555;
+      padding: 6px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    .qty-input {
+      width: 70px;
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      border: 1px solid #555;
+      padding: 6px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .remove-btn {
+      color: red;
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0 6px;
+    }
+
+    .list-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border: 1px solid #666;
+      border-radius: 999px;
+      font-size: .85rem;
+      background: #222;
+      color: #f5f5f5;
+    }
+
+    .footer-logo {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .footer-logo img {
+      width: 40%;
+      max-width: 200px;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="form-wrapper">
+    <div>
+      <div class="header-row">
+        <div class="logo">Części</div>
+        <button class="back-button" onclick="goBack()">← Cofnij</button>
+      </div>
+
+      <input type="text" id="ekipaTrasa" placeholder="EKIPA / TRASA" autocomplete="off">
+
+      <div id="scan-result" style="display: none;"></div>
+
+      <button id="startScanBtn" onclick="startScanning()" style="
+        width: 100%;
+        height: 50px;
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: #2e7d32;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        margin: 10px 0;">
+        Skanuj
+      </button>
+
+      <div id="reader" style="display: none;"></div>
+
+      <div style="display: flex; gap: 8px; margin: 10px 0;">
+        <input type="text" id="manualInput" placeholder="Dodaj indeks części ręcznie" autocomplete="off" style="flex: 1;">
+        <button onclick="addManual()" style="width: 25%; min-width: 80px; font-size: 0.8rem;">Dodaj</button>
+      </div>
+
+      <div class="list-header">
+        <h3 style="margin:0;">Lista części</h3>
+        <span class="badge" id="codeCount">0</span>
+      </div>
+
+      <ul id="codeList"></ul>
+
+      <button onclick="sendData()">Wyślij dane</button>
+      <p id="status"></p>
+
+      <div id="sendingOverlay" style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        text-align: center;
+      ">
+        <div style="
+          background: #333;
+          padding: 24px;
+          border-radius: 12px;
+          border: 1px solid #666;
+        ">
+          ⏳ Wysyłanie danych...<br>
+          Proszę czekać.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-logo">
+      <img src="https://jarogpbs.github.io/MagazynFR/Jaro.png" alt="Created by Jaro">
+    </div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
+
+    let czesci = [];
+    let html5Qr;
+    let isScanning = false;
+
+    function goBack() {
+      window.location.href = "index.html";
+    }
+
+    function saveCzesci() {
+      localStorage.setItem("czesciLista", JSON.stringify(czesci));
+    }
+
+    function updateList() {
+      const list = document.getElementById("codeList");
+      const count = document.getElementById("codeCount");
+
+      list.innerHTML = "";
+      count.textContent = String(czesci.length);
+
+      czesci.forEach((item, index) => {
+        const li = document.createElement("li");
+
+        const codeText = document.createElement("input");
+        codeText.type = "text";
+        codeText.value = item.indeks || "";
+        codeText.className = "code-text";
+        codeText.placeholder = "INDEKS";
+        codeText.oninput = () => {
+          czesci[index].indeks = codeText.value.toUpperCase().trim();
+          saveCzesci();
+        };
+
+        const qtyInput = document.createElement("input");
+        qtyInput.type = "number";
+        qtyInput.min = "1";
+        qtyInput.value = item.ilosc || 1;
+        qtyInput.className = "qty-input";
+        qtyInput.placeholder = "ILOŚĆ";
+        qtyInput.oninput = () => {
+          czesci[index].ilosc = qtyInput.value;
+          saveCzesci();
+        };
+
+        const remove = document.createElement("span");
+        remove.className = "remove-btn";
+        remove.textContent = "✕";
+        remove.title = "Usuń";
+        remove.onclick = () => {
+          czesci.splice(index, 1);
+          saveCzesci();
+          updateList();
+        };
+
+        li.appendChild(codeText);
+        li.appendChild(qtyInput);
+        li.appendChild(remove);
+        list.appendChild(li);
+      });
+    }
+
+    function addPart(indeks) {
+      const val = String(indeks || "").trim().toUpperCase();
+
+      if (!val) {
+        alert("Brak indeksu części.");
+        return;
+      }
+
+      const existing = czesci.find(c => String(c.indeks || "").toUpperCase().trim() === val);
+
+      if (existing) {
+        existing.ilosc = Number(existing.ilosc || 1) + 1;
+      } else {
+        czesci.unshift({
+          indeks: val,
+          ilosc: 1
+        });
+      }
+
+      saveCzesci();
+      updateList();
+    }
+
+    function addManual() {
+      const input = document.getElementById("manualInput");
+      const val = input.value.trim().toUpperCase();
+
+      if (!val) {
+        alert("Wpisz indeks części.");
+        return;
+      }
+
+      addPart(val);
+      input.value = "";
+    }
+
+    function sendData() {
+      const ekipaTrasa = document.getElementById("ekipaTrasa").value.trim().toUpperCase();
+
+      if (!ekipaTrasa) {
+        alert("Uzupełnij pole EKIPA / TRASA.");
+        return;
+      }
+
+      if (czesci.length === 0) {
+        alert("Lista części jest pusta.");
+        return;
+      }
+
+      for (const item of czesci) {
+        const indeks = String(item.indeks || "").trim().toUpperCase();
+        const ilosc = Number(item.ilosc || 0);
+
+        if (!indeks || !ilosc || ilosc <= 0) {
+          alert("Każda część musi mieć indeks i ilość większą od zera.");
+          return;
+        }
+      }
+
+      if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+
+      document.getElementById("sendingOverlay").style.display = "flex";
+
+      const formData = new FormData();
+      formData.append("strona", "czesci");
+      formData.append("ekipaTrasa", ekipaTrasa);
+      formData.append("czesci", JSON.stringify(czesci));
+
+      fetch(scriptURL, { method: "POST", body: formData })
+        .then(res => res.text())
+        .then(txt => {
+          alert("✅ Części wysłane.");
+          czesci = [];
+          localStorage.removeItem("czesciLista");
+          updateList();
+          window.location.href = "index.html";
+        })
+        .catch(err => {
+          document.getElementById("sendingOverlay").style.display = "none";
+          document.getElementById("status").innerText = "❌ Błąd: " + err;
+        });
+    }
+
+    function startScanning() {
+      if (isScanning) return;
+      isScanning = true;
+
+      document.getElementById("startScanBtn").style.display = "none";
+      const readerDiv = document.getElementById("reader");
+      readerDiv.style.display = "block";
+      readerDiv.innerHTML = "";
+
+      html5Qr = new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
+
+          html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+            stopScanning();
+
+            const val = (text || "").toUpperCase().trim();
+            addPart(val);
+
+            if ("vibrate" in navigator) navigator.vibrate(200);
+
+            const beep = document.getElementById("beepSound");
+            if (beep) beep.play().catch(() => {});
+          });
+        } else {
+          alert("Nie wykryto kamery.");
+          isScanning = false;
+        }
+      }).catch(err => {
+        alert("Błąd kamery: " + err);
+        isScanning = false;
+      });
+    }
+
+    function stopScanning() {
+      if (html5Qr && isScanning) {
+        html5Qr.stop().then(() => {
+          html5Qr.clear();
+          isScanning = false;
+          document.getElementById("reader").style.display = "none";
+          document.getElementById("startScanBtn").style.display = "inline-block";
+        }).catch(err => {
+          console.error("Błąd zatrzymania skanera:", err);
+          isScanning = false;
+        });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const saved = localStorage.getItem("czesciLista");
+
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          czesci = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          czesci = [];
+        }
+      }
+
+      updateList();
+    });
+  </script>
+
+  <script src="autoLogout.js"></script>
+
+  <script>
+    function reloadAtMidnight() {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+
+      const timeToMidnight = midnight - now;
+
+      setTimeout(() => {
+        window.location.reload(true);
+      }, timeToMidnight);
+    }
+
+    reloadAtMidnight();
+  </script>
+</body>
+</html>
