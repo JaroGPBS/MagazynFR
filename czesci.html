@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Części – Le Magazynier</title>
+  <title>Serwisy części – Le Magazynier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
@@ -39,7 +39,7 @@
 
     .logo {
       font-family: 'Informal Roman', cursive;
-      font-size: 2.5rem;
+      font-size: 2.3rem;
       color: #f9f9f9;
     }
 
@@ -69,16 +69,47 @@
 
     input::placeholder { color: #999; }
 
+    button {
+      cursor: pointer;
+      background-color: #666;
+      border: none;
+      font-weight: bold;
+    }
+
+    button:hover { background-color: #777; }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     #reader {
       width: 100%;
       max-width: 400px;
       margin: 16px auto;
     }
 
-    #scan-result {
-      text-align: center;
-      color: #00ff00;
-      margin-bottom: 12px;
+    .search-results {
+      margin: 8px 0 14px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .result-item {
+      padding: 10px;
+      background: #222;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-item:hover {
+      background: #444;
     }
 
     ul {
@@ -90,28 +121,24 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 0;
+      padding: 8px 0;
       border-bottom: 1px solid #666;
     }
 
-    .code-text {
+    .part-name {
       flex: 1;
-      background-color: #1c1c1c;
-      color: #f5f5f5;
-      border: 1px solid #555;
-      padding: 6px;
-      font-size: 0.9rem;
-      text-transform: uppercase;
+      font-size: 0.95rem;
+      word-break: break-word;
     }
 
-    .qty-input {
-      width: 70px;
-      background-color: #1c1c1c;
-      color: #f5f5f5;
-      border: 1px solid #555;
-      padding: 6px;
-      font-size: 0.9rem;
+    .part-qty {
+      min-width: 55px;
       text-align: center;
+      font-weight: bold;
+      padding: 6px;
+      border-radius: 6px;
+      background: #1c1c1c;
+      border: 1px solid #555;
     }
 
     .remove-btn {
@@ -119,6 +146,7 @@
       cursor: pointer;
       font-weight: bold;
       padding: 0 6px;
+      font-size: 1.3rem;
     }
 
     .list-header {
@@ -148,6 +176,70 @@
       max-width: 200px;
       height: auto;
     }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 18px;
+    }
+
+    .overlay-box {
+      width: 100%;
+      max-width: 360px;
+      background: #333;
+      padding: 22px;
+      border-radius: 12px;
+      border: 1px solid #666;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+
+    .modal-part {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: #ddd;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .choice-row button {
+      flex: 1;
+      height: 46px;
+    }
+
+    .receive-btn {
+      background-color: #2e7d32;
+    }
+
+    .issue-btn {
+      background-color: #aa3333;
+    }
+
+    .cancel-btn {
+      background-color: #555;
+      margin-top: 12px;
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: #ffdddd;
+      margin-top: 10px;
+    }
   </style>
 </head>
 
@@ -155,13 +247,14 @@
   <div class="form-wrapper">
     <div>
       <div class="header-row">
-        <div class="logo">Części</div>
+        <div class="logo">Serwisy części</div>
         <button class="back-button" onclick="goBack()">← Cofnij</button>
       </div>
 
       <input type="text" id="ekipaTrasa" placeholder="EKIPA / TRASA" autocomplete="off">
 
-      <div id="scan-result" style="display: none;"></div>
+      <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
+      <div id="searchResults" class="search-results"></div>
 
       <button id="startScanBtn" onclick="startScanning()" style="
         width: 100%;
@@ -173,16 +266,11 @@
         border: none;
         border-radius: 12px;
         cursor: pointer;
-        margin: 10px 0;">
-        Skanuj
+        margin: 10px 0;" disabled>
+        Skanuj QR części
       </button>
 
       <div id="reader" style="display: none;"></div>
-
-      <div style="display: flex; gap: 8px; margin: 10px 0;">
-        <input type="text" id="manualInput" placeholder="Dodaj indeks części ręcznie" autocomplete="off" style="flex: 1;">
-        <button onclick="addManual()" style="width: 25%; min-width: 80px; font-size: 0.8rem;">Dodaj</button>
-      </div>
 
       <div class="list-header">
         <h3 style="margin:0;">Lista części</h3>
@@ -191,31 +279,8 @@
 
       <ul id="codeList"></ul>
 
-      <button onclick="sendData()">Wyślij dane</button>
-      <p id="status"></p>
-
-      <div id="sendingOverlay" style="
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.75);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.2rem;
-        text-align: center;
-      ">
-        <div style="
-          background: #333;
-          padding: 24px;
-          border-radius: 12px;
-          border: 1px solid #666;
-        ">
-          ⏳ Wysyłanie danych...<br>
-          Proszę czekać.
-        </div>
-      </div>
+      <button id="sendBtn" onclick="sendData()" disabled>Wyślij dane</button>
+      <p id="status" class="status"></p>
     </div>
 
     <div class="footer-logo">
@@ -223,10 +288,45 @@
     </div>
   </div>
 
+  <!-- ŁADOWANIE BAZY -->
+  <div id="loadingOverlay" class="overlay" style="display:flex;">
+    <div class="overlay-box">
+      ⏳ Aktualizuję bazę części...<br>
+      Proszę czekać.
+    </div>
+  </div>
+
+  <!-- WYSYŁANIE -->
+  <div id="sendingOverlay" class="overlay">
+    <div class="overlay-box">
+      ⏳ Wysyłanie danych...<br>
+      Proszę czekać.
+    </div>
+  </div>
+
+  <!-- WYBÓR PRZYJĘCIE / WYDANIE -->
+  <div id="partModal" class="overlay">
+    <div class="overlay-box">
+      <div class="modal-title">Wybierz operację</div>
+      <div id="modalPartName" class="modal-part"></div>
+
+      <input type="number" id="modalQty" min="1" value="1" placeholder="ILOŚĆ">
+
+      <div class="choice-row">
+        <button class="receive-btn" onclick="confirmPart('receive')">Przyjmuję</button>
+        <button class="issue-btn" onclick="confirmPart('issue')">Wydaję</button>
+      </div>
+
+      <button class="cancel-btn" onclick="closePartModal()">Anuluj</button>
+    </div>
+  </div>
+
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
 
-    let czesci = [];
+    let bazaCzesci = [];
+    let listaCzesci = [];
+    let selectedPart = null;
     let html5Qr;
     let isScanning = false;
 
@@ -234,8 +334,16 @@
       window.location.href = "index.html";
     }
 
-    function saveCzesci() {
-      localStorage.setItem("czesciLista", JSON.stringify(czesci));
+    function normalizeText(text) {
+      return String(text || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function saveLista() {
+      localStorage.setItem("serwisyCzesciLista", JSON.stringify(listaCzesci));
     }
 
     function updateList() {
@@ -243,83 +351,194 @@
       const count = document.getElementById("codeCount");
 
       list.innerHTML = "";
-      count.textContent = String(czesci.length);
+      count.textContent = String(listaCzesci.length);
 
-      czesci.forEach((item, index) => {
+      listaCzesci.forEach((item, index) => {
         const li = document.createElement("li");
 
-        const codeText = document.createElement("input");
-        codeText.type = "text";
-        codeText.value = item.indeks || "";
-        codeText.className = "code-text";
-        codeText.placeholder = "INDEKS";
-        codeText.oninput = () => {
-          czesci[index].indeks = codeText.value.toUpperCase().trim();
-          saveCzesci();
-        };
+        const name = document.createElement("div");
+        name.className = "part-name";
+        name.textContent = item.nazwa || "";
 
-        const qtyInput = document.createElement("input");
-        qtyInput.type = "number";
-        qtyInput.min = "1";
-        qtyInput.value = item.ilosc || 1;
-        qtyInput.className = "qty-input";
-        qtyInput.placeholder = "ILOŚĆ";
-        qtyInput.oninput = () => {
-          czesci[index].ilosc = qtyInput.value;
-          saveCzesci();
-        };
+        const qty = document.createElement("div");
+        qty.className = "part-qty";
+        qty.textContent = item.ilosc > 0 ? String(item.ilosc) : String(item.ilosc);
 
         const remove = document.createElement("span");
         remove.className = "remove-btn";
         remove.textContent = "✕";
         remove.title = "Usuń";
         remove.onclick = () => {
-          czesci.splice(index, 1);
-          saveCzesci();
+          listaCzesci.splice(index, 1);
+          saveLista();
           updateList();
         };
 
-        li.appendChild(codeText);
-        li.appendChild(qtyInput);
+        li.appendChild(name);
+        li.appendChild(qty);
         li.appendChild(remove);
         list.appendChild(li);
       });
     }
 
-    function addPart(indeks) {
-      const val = String(indeks || "").trim().toUpperCase();
+    function loadSavedList() {
+      const saved = localStorage.getItem("serwisyCzesciLista");
 
-      if (!val) {
-        alert("Brak indeksu części.");
-        return;
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          listaCzesci = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          listaCzesci = [];
+        }
       }
 
-      const existing = czesci.find(c => String(c.indeks || "").toUpperCase().trim() === val);
-
-      if (existing) {
-        existing.ilosc = Number(existing.ilosc || 1) + 1;
-      } else {
-        czesci.unshift({
-          indeks: val,
-          ilosc: 1
-        });
-      }
-
-      saveCzesci();
       updateList();
     }
 
-    function addManual() {
-      const input = document.getElementById("manualInput");
-      const val = input.value.trim().toUpperCase();
+    function enablePage() {
+      document.getElementById("searchInput").disabled = false;
+      document.getElementById("startScanBtn").disabled = false;
+      document.getElementById("sendBtn").disabled = false;
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
 
-      if (!val) {
-        alert("Wpisz indeks części.");
+    function disablePageWithError(message) {
+      document.getElementById("loadingOverlay").style.display = "none";
+      document.getElementById("status").innerText = "❌ " + message;
+      document.getElementById("searchInput").disabled = true;
+      document.getElementById("startScanBtn").disabled = true;
+      document.getElementById("sendBtn").disabled = true;
+    }
+
+    function loadPartsBase() {
+      document.getElementById("loadingOverlay").style.display = "flex";
+
+      fetch(scriptURL + "?akcja=bazaCzesci")
+        .then(res => res.json())
+        .then(data => {
+          if (!data.ok) {
+            disablePageWithError(data.error || "Nie udało się pobrać bazy części.");
+            return;
+          }
+
+          bazaCzesci = Array.isArray(data.czesci) ? data.czesci : [];
+
+          if (bazaCzesci.length === 0) {
+            disablePageWithError("Baza części jest pusta.");
+            return;
+          }
+
+          enablePage();
+        })
+        .catch(err => {
+          disablePageWithError("Nie udało się pobrać bazy części. Odśwież stronę.");
+        });
+    }
+
+    function searchParts() {
+      const input = document.getElementById("searchInput");
+      const resultsBox = document.getElementById("searchResults");
+      const query = normalizeText(input.value);
+
+      resultsBox.innerHTML = "";
+
+      if (query.length < 2) {
+        resultsBox.style.display = "none";
         return;
       }
 
-      addPart(val);
-      input.value = "";
+      const results = bazaCzesci
+        .filter(part => {
+          const nazwa = normalizeText(part.nazwa);
+          const indeks = normalizeText(part.indeks);
+          return nazwa.includes(query) || indeks.includes(query);
+        })
+        .slice(0, 20);
+
+      if (results.length === 0) {
+        resultsBox.style.display = "block";
+        const empty = document.createElement("div");
+        empty.className = "result-item";
+        empty.textContent = "Brak wyników";
+        resultsBox.appendChild(empty);
+        return;
+      }
+
+      results.forEach(part => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.textContent = part.nazwa;
+        div.onclick = () => {
+          resultsBox.style.display = "none";
+          input.value = "";
+          openPartModal(part);
+        };
+        resultsBox.appendChild(div);
+      });
+
+      resultsBox.style.display = "block";
+    }
+
+    function findPartByIndex(indeks) {
+      const val = String(indeks || "").trim().toUpperCase();
+      return bazaCzesci.find(part => String(part.indeks || "").trim().toUpperCase() === val);
+    }
+
+    function openPartModal(part) {
+      selectedPart = part;
+
+      document.getElementById("modalPartName").textContent = part.nazwa;
+      document.getElementById("modalQty").value = 1;
+      document.getElementById("partModal").style.display = "flex";
+    }
+
+    function closePartModal() {
+      selectedPart = null;
+      document.getElementById("partModal").style.display = "none";
+    }
+
+    function confirmPart(type) {
+      if (!selectedPart) return;
+
+      const qtyRaw = document.getElementById("modalQty").value;
+      const qty = Number(qtyRaw || 0);
+
+      if (!qty || qty <= 0) {
+        alert("Podaj ilość większą od zera.");
+        return;
+      }
+
+      const signedQty = type === "issue" ? -Math.abs(qty) : Math.abs(qty);
+
+      addPartToList({
+        indeks: selectedPart.indeks,
+        nazwa: selectedPart.nazwa,
+        ilosc: signedQty
+      });
+
+      closePartModal();
+    }
+
+    function addPartToList(part) {
+      const existing = listaCzesci.find(item =>
+        String(item.indeks || "").trim().toUpperCase() === String(part.indeks || "").trim().toUpperCase()
+      );
+
+      if (existing) {
+        existing.ilosc = Number(existing.ilosc || 0) + Number(part.ilosc || 0);
+
+        if (existing.ilosc === 0) {
+          listaCzesci = listaCzesci.filter(item =>
+            String(item.indeks || "").trim().toUpperCase() !== String(part.indeks || "").trim().toUpperCase()
+          );
+        }
+      } else {
+        listaCzesci.unshift(part);
+      }
+
+      saveLista();
+      updateList();
     }
 
     function sendData() {
@@ -330,19 +549,9 @@
         return;
       }
 
-      if (czesci.length === 0) {
+      if (listaCzesci.length === 0) {
         alert("Lista części jest pusta.");
         return;
-      }
-
-      for (const item of czesci) {
-        const indeks = String(item.indeks || "").trim().toUpperCase();
-        const ilosc = Number(item.ilosc || 0);
-
-        if (!indeks || !ilosc || ilosc <= 0) {
-          alert("Każda część musi mieć indeks i ilość większą od zera.");
-          return;
-        }
       }
 
       if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
@@ -352,14 +561,14 @@
       const formData = new FormData();
       formData.append("strona", "czesci");
       formData.append("ekipaTrasa", ekipaTrasa);
-      formData.append("czesci", JSON.stringify(czesci));
+      formData.append("czesci", JSON.stringify(listaCzesci));
 
       fetch(scriptURL, { method: "POST", body: formData })
         .then(res => res.text())
         .then(txt => {
           alert("✅ Części wysłane.");
-          czesci = [];
-          localStorage.removeItem("czesciLista");
+          listaCzesci = [];
+          localStorage.removeItem("serwisyCzesciLista");
           updateList();
           window.location.href = "index.html";
         })
@@ -387,8 +596,15 @@
           html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
             stopScanning();
 
-            const val = (text || "").toUpperCase().trim();
-            addPart(val);
+            const scanned = String(text || "").trim().toUpperCase();
+            const part = findPartByIndex(scanned);
+
+            if (!part) {
+              alert("Nie znaleziono części dla zeskanowanego kodu.");
+              return;
+            }
+
+            openPartModal(part);
 
             if ("vibrate" in navigator) navigator.vibrate(200);
 
@@ -398,10 +614,14 @@
         } else {
           alert("Nie wykryto kamery.");
           isScanning = false;
+          document.getElementById("startScanBtn").style.display = "inline-block";
+          document.getElementById("reader").style.display = "none";
         }
       }).catch(err => {
         alert("Błąd kamery: " + err);
         isScanning = false;
+        document.getElementById("startScanBtn").style.display = "inline-block";
+        document.getElementById("reader").style.display = "none";
       });
     }
 
@@ -415,23 +635,17 @@
         }).catch(err => {
           console.error("Błąd zatrzymania skanera:", err);
           isScanning = false;
+          document.getElementById("reader").style.display = "none";
+          document.getElementById("startScanBtn").style.display = "inline-block";
         });
       }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      const saved = localStorage.getItem("czesciLista");
+      loadSavedList();
+      loadPartsBase();
 
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          czesci = Array.isArray(parsed) ? parsed : [];
-        } catch {
-          czesci = [];
-        }
-      }
-
-      updateList();
+      document.getElementById("searchInput").addEventListener("input", searchParts);
     });
   </script>
 
