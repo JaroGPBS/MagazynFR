@@ -10,17 +10,13 @@ function wykonajWylogowanie() {
 
 function ustawWylogowanieNa23() {
   const now = new Date();
-  const hour = now.getHours();
 
-  // Po 23:00 i przed 7:00 od razu wyloguj
-  if (hour >= 23 || hour < 7) {
-    wykonajWylogowanie();
-    return;
-  }
-
-  // Ustaw wylogowanie dokładnie na 23:00
   const logoutTime = new Date();
   logoutTime.setHours(23, 0, 0, 0);
+
+  if (now >= logoutTime) {
+    logoutTime.setDate(logoutTime.getDate() + 1);
+  }
 
   const timeToLogout = logoutTime - now;
 
