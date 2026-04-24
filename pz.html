@@ -254,10 +254,11 @@ function removeCode(index) {
 function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
+  const przewoznik = localStorage.getItem("przewoznik") || "";
   const tablica = localStorage.getItem("tablica") || "";
   const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
 
-  if (!login || !trasa || !tablica || codes.length === 0) {
+  if (!login || !trasa || !przewoznik || !tablica || codes.length === 0) {
     alert("Brakuje danych lub lista kodów jest pusta.");
     return;
   }
@@ -281,8 +282,9 @@ function sendData() {
 
   const formData = new FormData();
   formData.append("login", login);
-  formData.append("trasa", trasa);
-  formData.append("tablica", tablica);
+  formData.append("trasa", trasa.toUpperCase());
+  formData.append("przewoznik", przewoznik.toUpperCase());
+  formData.append("tablica", tablica.toUpperCase());
   formData.append("dodatkowe", dodatkoweInfo || "-");
   formData.append("kody", JSON.stringify(finalData));
   formData.append("strona", "pz");
@@ -295,6 +297,7 @@ function sendData() {
       localStorage.removeItem("codesPZ");
       updateList();
       localStorage.removeItem("trasa");
+      localStorage.removeItem("przewoznik");
       localStorage.removeItem("tablica");
       localStorage.removeItem("tablicaSam");
       localStorage.removeItem("tablicaNacz");
@@ -327,8 +330,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
+  const przewoznik = localStorage.getItem("przewoznik") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
-  document.getElementById("daneUzytkownika").innerText = `${login}  -  ${trasa}  -  ${tablica}`;
+  document.getElementById("daneUzytkownika").innerText = `${login}  -  ${trasa}  -  ${przewoznik}  -  ${tablica}`;
 });
 
 let html5Qr;
