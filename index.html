@@ -124,14 +124,14 @@
       background-color: #555;
     }
 
-    .logout-btn {
-      background-color: #aa3333;
-      width: 100%;
-      height: 52px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin-top: 12px;
-    }
+.logout-btn {
+  background-color: #aa3333;
+  width: 100%;
+  height: 42px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin-top: auto;
+}
 
     .logout-btn:hover {
       background-color: #cc4444;
@@ -174,12 +174,12 @@
         <p>Witaj, <strong id="user-name"></strong>!</p>
 
         <div id="main-menu" class="main-menu">
-          <button onclick="showRouteForm('pz.html')">Przyjęcie</button>
-          <button onclick="showRouteForm('wz.html')">Wydanie</button>
+          <button onclick="showRouteForm('pz.html')">Przyjęcie moduły</button>
+          <button onclick="showRouteForm('wz.html')">Wydanie moduły</button>
           <button onclick="window.location.href='czesci.html'">Serwisy części</button>
-
-          <button class="logout-btn" onclick="logout()">Wyloguj</button>
         </div>
+
+        <button id="logoutBtn" class="logout-btn" onclick="logout()">Wyloguj</button>
 
         <!-- FORMULARZ TRASY DLA PZ/WZ -->
         <div id="route-form" class="hidden">
@@ -228,16 +228,18 @@
     }
 
     function showMenu() {
-      selectedDestination = "";
-      document.getElementById("main-menu").classList.remove("hidden");
-      document.getElementById("route-form").classList.add("hidden");
-    }
+  selectedDestination = "";
+  document.getElementById("main-menu").classList.remove("hidden");
+  document.getElementById("route-form").classList.add("hidden");
+  document.getElementById("logoutBtn").classList.remove("hidden");
+}
 
     function showRouteForm(destination) {
       selectedDestination = destination;
 
-      document.getElementById("main-menu").classList.add("hidden");
+      ddocument.getElementById("main-menu").classList.add("hidden");
       document.getElementById("route-form").classList.remove("hidden");
+      document.getElementById("logoutBtn").classList.add("hidden");
 
       const trasa = localStorage.getItem("trasa");
       const przewoznik = localStorage.getItem("przewoznik");
