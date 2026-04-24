@@ -142,10 +142,12 @@
 <input type="text" id="tablicaSam" class="uppercase" placeholder="TABLICA REJESTRACYJNA SAMOCHODU" required autocomplete="off">
 <input type="text" id="tablicaNacz" class="uppercase" placeholder="TABLICA REJESTRACYJNA NACZEPY" required autocomplete="off">
 
-        <div class="buttons">
-  <button onclick="goTo('pz.html')">Przyjęcie</button>
+<div class="buttons">
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+    <button onclick="goTo('pz.html')">Przyjęcie</button>
+    <button onclick="window.location.href='czesci.html'">WZ/PZ Części</button>
+  </div>
   <button onclick="goTo('wz.html')">Wydanie</button>
-  <button onclick="window.location.href='czesci.html'">PZ/WZ Części</button>
 </div>
 
         <button class="logout-btn" onclick="logout()">Wyloguj</button>
