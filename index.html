@@ -5,8 +5,10 @@
   <title>Le Magazynier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Great+Vibes&display=swap" rel="stylesheet">
+
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 16px;
@@ -14,6 +16,7 @@
       font-family: sans-serif;
       color: #f5f5f5;
     }
+
     .form-wrapper {
       max-width: 500px;
       margin: auto;
@@ -33,34 +36,22 @@
       align-items: flex-start;
       margin-bottom: 20px;
     }
+
     .logo-left {
       font-family: 'Informal Roman', cursive;
       color: #f9f9f9;
       line-height: 0.9;
       margin-left: 30px;
     }
+
     .logo-left .main {
       font-size: 3rem;
     }
+
     .logo-left .sub {
       font-size: 2rem;
       transform: translateY(-11px) translateX(26px);
       opacity: 0.8;
-    }
-    .logo-right {
-      text-align: right;
-      color: #ccc;
-      font-family: 'Informal Roman', cursive;
-    }
-    .logo-right .by {
-      font-size: 1.1rem;
-      margin-bottom: 1.5px;
-    }
-    .logo-right .initials {
-      font-size: 1.5rem;
-      font-weight: bold;
-      line-height: 1;
-      transform: translateX(-20px);
     }
 
     input {
@@ -72,17 +63,15 @@
       border-radius: 4px;
     }
 
-    input.uppercase { text-transform: uppercase; }
-    .hidden { display: none; }
-
-    .buttons {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 20px;
+    input.uppercase {
+      text-transform: uppercase;
     }
-    .buttons button {
-      flex: 1;
+
+    .hidden {
+      display: none;
+    }
+
+    button {
       padding: 12px;
       font-size: 1rem;
       border: none;
@@ -92,23 +81,67 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    .buttons button:hover { background-color: #888; }
+
+    button:hover {
+      background-color: #888;
+    }
+
+    .main-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .main-menu button {
+      width: 100%;
+      height: 52px;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .form-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .form-buttons button {
+      flex: 1;
+      height: 48px;
+      font-weight: bold;
+    }
+
+    .ok-btn {
+      background-color: #2e7d32;
+    }
+
+    .ok-btn:hover {
+      background-color: #3fa344;
+    }
+
+    .back-btn {
+      background-color: #555;
+    }
 
     .logout-btn {
       background-color: #aa3333;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      margin-top: 20px;
-      float: right;
+      width: 100%;
+      height: 52px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .logout-btn:hover {
+      background-color: #cc4444;
     }
 
     .footer-logo {
       margin-top: 20px;
       text-align: center;
     }
+
     .footer-logo img {
       width: 45%;
       max-width: 200px;
@@ -117,11 +150,12 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="form-wrapper" autocomplete="off">
     <div>
-      <!-- Nagłówek -->
+
       <div class="logo">
         <div class="logo-left">
           <div class="main">Le Magazynier</div>
@@ -129,28 +163,36 @@
         </div>
       </div>
 
-      <!-- Logowanie -->
-      <input type="password" id="kod" placeholder="Kod pracownika" required autocomplete="off">
-      <button onclick="checkLogin()">Zaloguj</button>
+      <!-- LOGOWANIE -->
+      <div id="login-section">
+        <input type="password" id="kod" placeholder="Kod pracownika" required autocomplete="off">
+        <button id="loginBtn" onclick="checkLogin()" style="width:100%;">Zaloguj</button>
+      </div>
 
-      <!-- Sekcja po zalogowaniu -->
+      <!-- MENU PO ZALOGOWANIU -->
       <div id="form-section" class="hidden">
         <p>Witaj, <strong id="user-name"></strong>!</p>
 
-<input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
-<input type="text" id="przewoznik" class="uppercase" placeholder="NAZWA FIRMY PRZEWOŹNIKA" required autocomplete="off">
-<input type="text" id="tablicaSam" class="uppercase" placeholder="TABLICA REJESTRACYJNA SAMOCHODU" required autocomplete="off">
-<input type="text" id="tablicaNacz" class="uppercase" placeholder="TABLICA REJESTRACYJNA NACZEPY" required autocomplete="off">
+        <div id="main-menu" class="main-menu">
+          <button onclick="showRouteForm('pz.html')">Przyjęcie moduły</button>
+          <button onclick="showRouteForm('wz.html')">Wydanie moduły</button>
+          <button onclick="window.location.href='czesci.html'">Serwisy części</button>
 
-<div class="buttons">
-  <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
-    <button onclick="goTo('pz.html')">Przyjęcie</button>
-    <button onclick="window.location.href='czesci.html'">WZ/PZ Części</button>
-  </div>
-  <button onclick="goTo('wz.html')">Wydanie</button>
-</div>
+          <button class="logout-btn" onclick="logout()">Wyloguj</button>
+        </div>
 
-        <button class="logout-btn" onclick="logout()">Wyloguj</button>
+        <!-- FORMULARZ TRASY DLA PZ/WZ -->
+        <div id="route-form" class="hidden">
+          <input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
+          <input type="text" id="przewoznik" class="uppercase" placeholder="NAZWA FIRMY PRZEWOŹNIKA" required autocomplete="off">
+          <input type="text" id="tablicaSam" class="uppercase" placeholder="TABLICA REJESTRACYJNA SAMOCHODU" required autocomplete="off">
+          <input type="text" id="tablicaNacz" class="uppercase" placeholder="TABLICA REJESTRACYJNA NACZEPY" required autocomplete="off">
+
+          <div class="form-buttons">
+            <button class="back-btn" onclick="backToMenu()">Cofnij</button>
+            <button class="ok-btn" onclick="goToSelected()">OK</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -165,6 +207,8 @@
       "2009": "Krystian M. ",
     };
 
+    let selectedDestination = "";
+
     function checkLogin() {
       const kod = document.getElementById("kod").value.trim();
       const login = users[kod];
@@ -175,35 +219,67 @@
       }
 
       localStorage.setItem("login", login);
+
       document.getElementById("user-name").textContent = login;
       document.getElementById("form-section").classList.remove("hidden");
-      document.getElementById("kod").classList.add("hidden");
-      event.target.style.display = "none";
+      document.getElementById("login-section").classList.add("hidden");
+
+      showMenu();
     }
 
-    function goTo(destination) {
-    const trasa = document.getElementById("trasa").value.trim().toUpperCase();
-    const przewoznik = document.getElementById("przewoznik").value.trim().toUpperCase();
-    const tablicaSam = document.getElementById("tablicaSam").value.trim().toUpperCase();
-    const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
+    function showMenu() {
+      selectedDestination = "";
+      document.getElementById("main-menu").classList.remove("hidden");
+      document.getElementById("route-form").classList.add("hidden");
+    }
+
+    function showRouteForm(destination) {
+      selectedDestination = destination;
+
+      document.getElementById("main-menu").classList.add("hidden");
+      document.getElementById("route-form").classList.remove("hidden");
+
+      const trasa = localStorage.getItem("trasa");
+      const przewoznik = localStorage.getItem("przewoznik");
+      const tablicaSam = localStorage.getItem("tablicaSam");
+      const tablicaNacz = localStorage.getItem("tablicaNacz");
+
+      if (trasa) document.getElementById("trasa").value = trasa;
+      if (przewoznik) document.getElementById("przewoznik").value = przewoznik;
+      if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
+      if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
+    }
+
+    function backToMenu() {
+      showMenu();
+    }
+
+    function goToSelected() {
+      if (!selectedDestination) {
+        alert("Nie wybrano operacji.");
+        return;
+      }
+
+      const trasa = document.getElementById("trasa").value.trim().toUpperCase();
+      const przewoznik = document.getElementById("przewoznik").value.trim().toUpperCase();
+      const tablicaSam = document.getElementById("tablicaSam").value.trim().toUpperCase();
+      const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
 
       if (!trasa || !przewoznik || !tablicaSam || !tablicaNacz) {
         alert("Proszę uzupełnić wszystkie pola.");
         return;
       }
 
-      // połączona wartość SAMOCHÓD / NACZEPA
       const tablicaCombined = `${tablicaSam} / ${tablicaNacz}`;
 
-      // zapisy w localStorage (zgodność wstecz + wygoda uzupełniania pól)
       localStorage.setItem("trasa", trasa);
       localStorage.setItem("przewoznik", przewoznik);
-      localStorage.setItem("tablica", tablicaCombined);   // tu przechowujemy połączoną wartość
-      localStorage.setItem("tablicaSam", tablicaSam);     // osobno samochód
-      localStorage.setItem("tablicaNacz", tablicaNacz);   // osobno naczepa
+      localStorage.setItem("tablica", tablicaCombined);
+      localStorage.setItem("tablicaSam", tablicaSam);
+      localStorage.setItem("tablicaNacz", tablicaNacz);
 
-      // przekazujemy połączoną wartość jako ?tablica=...
-      const url = `${destination}?trasa=${encodeURIComponent(trasa)}&tablica=${encodeURIComponent(tablicaCombined)}`;
+      const url = `${selectedDestination}?trasa=${encodeURIComponent(trasa)}&przewoznik=${encodeURIComponent(przewoznik)}&tablica=${encodeURIComponent(tablicaCombined)}`;
+
       window.location.href = url;
     }
 
@@ -216,96 +292,75 @@
       localStorage.removeItem("tablicaNacz");
 
       document.getElementById("form-section").classList.add("hidden");
-      document.getElementById("kod").classList.remove("hidden");
+      document.getElementById("login-section").classList.remove("hidden");
       document.getElementById("kod").value = "";
-      document.querySelector("button[onclick='checkLogin()']").style.display = "inline-block";
+
+      showMenu();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-    // --- Nowa część: czyść po powrocie z pz.html ---
-    if (sessionStorage.getItem("clearInputsAfterSend") === "1") {
-    sessionStorage.removeItem("clearInputsAfterSend");
+      if (sessionStorage.getItem("clearInputsAfterSend") === "1") {
+        sessionStorage.removeItem("clearInputsAfterSend");
 
-    // Usuń zapisane wartości
-    localStorage.removeItem("trasa");
-    localStorage.removeItem("przewoznik");
-    localStorage.removeItem("tablicaSam");
-    localStorage.removeItem("tablicaNacz");
+        localStorage.removeItem("trasa");
+        localStorage.removeItem("przewoznik");
+        localStorage.removeItem("tablica");
+        localStorage.removeItem("tablicaSam");
+        localStorage.removeItem("tablicaNacz");
 
-    // Wyczyść widoczne pola (jeśli istnieją)
-    const trasaEl  = document.getElementById("trasa");
-    const przewEl  = document.getElementById("przewoznik");
-    const tabSamEl = document.getElementById("tablicaSam");
-    const tabNacEl = document.getElementById("tablicaNacz");
-    if (trasaEl)  trasaEl.value  = "";
-    if (przewEl)  przewEl.value  = "";
-    if (tabSamEl) tabSamEl.value = "";
-    if (tabNacEl) tabNacEl.value = "";
+        const trasaEl = document.getElementById("trasa");
+        const przewEl = document.getElementById("przewoznik");
+        const tabSamEl = document.getElementById("tablicaSam");
+        const tabNacEl = document.getElementById("tablicaNacz");
+
+        if (trasaEl) trasaEl.value = "";
+        if (przewEl) przewEl.value = "";
+        if (tabSamEl) tabSamEl.value = "";
+        if (tabNacEl) tabNacEl.value = "";
+      }
+
+      const login = localStorage.getItem("login");
+
+      if (login) {
+        document.getElementById("user-name").textContent = login;
+        document.getElementById("form-section").classList.remove("hidden");
+        document.getElementById("login-section").classList.add("hidden");
+        showMenu();
+      }
+    });
+
+    window.addEventListener("pageshow", (ev) => {
+      if (ev.persisted) {
+        const trasaEl = document.getElementById("trasa");
+        const przewEl = document.getElementById("przewoznik");
+        const tabSamEl = document.getElementById("tablicaSam");
+        const tabNacEl = document.getElementById("tablicaNacz");
+
+        if (trasaEl) trasaEl.value = "";
+        if (przewEl) przewEl.value = "";
+        if (tabSamEl) tabSamEl.value = "";
+        if (tabNacEl) tabNacEl.value = "";
+      }
+    });
+  </script>
+
+  <script src="autoLogout.js"></script>
+
+  <script>
+    function reloadAtMidnight() {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+
+      const timeToMidnight = midnight - now;
+
+      setTimeout(() => {
+        window.location.reload(true);
+      }, timeToMidnight);
     }
 
-  // --- Twój dotychczasowy kod (bez zmian) ---
-  const login = localStorage.getItem("login");
-  const trasa = localStorage.getItem("trasa");
-  const przewoznik = localStorage.getItem("przewoznik");
-  const tablicaSam = localStorage.getItem("tablicaSam");
-  const tablicaNacz = localStorage.getItem("tablicaNacz");
+    reloadAtMidnight();
+  </script>
 
-  if (login) {
-    document.getElementById("user-name").textContent = login;
-    document.getElementById("form-section").classList.remove("hidden");
-    document.getElementById("kod").classList.add("hidden");
-    document.querySelector("button[onclick='checkLogin()']").style.display = "none";
-  }
-
-  if (przewoznik) document.getElementById("przewoznik").value = przewoznik;
-  if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
-  if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
-});
-
-// dodatkowo: obsłuż powrót z pamięci podręcznej (gest „wstecz”)
-window.addEventListener("pageshow", (ev) => {
-  if (ev.persisted) {
-    const trasaEl  = document.getElementById("trasa");
-    const przewEl  = document.getElementById("przewoznik");
-    const tabSamEl = document.getElementById("tablicaSam");
-    const tabNacEl = document.getElementById("tablicaNacz");
-    if (trasaEl)  trasaEl.value  = "";
-    if (przewEl)  przewEl.value  = "";
-    if (tabSamEl) tabSamEl.value = "";
-    if (tabNacEl) tabNacEl.value = "";
-  }
-});
-</script>
-
-<script src="autoLogout.js"></script>
-<script>
-  function reloadAtMidnight() {
-    const now = new Date();
-    const midnight = new Date();
-    midnight.setHours(24, 0, 0, 0);
-
-    const timeToMidnight = midnight - now;
-
-    setTimeout(() => {
-      window.location.reload(true);
-    }, timeToMidnight);
-  }
-
-  reloadAtMidnight();
-</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
