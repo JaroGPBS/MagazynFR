@@ -182,12 +182,6 @@
       <ul id="codeList"></ul>
 
       <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-
-      <div class="checkbox-row">
-        <label><input type="radio" name="typDostawy" value="Załadunek"> Załadunek</label>
-        <label><input type="radio" name="typDostawy" value="Doładunek"> Doładunek</label>
-      </div>
-
       <button onclick="sendData()">Wyślij dane</button>
       <p id="status"></p>
     </div>
@@ -282,11 +276,11 @@
 
       const login = localStorage.getItem("login") || "";
       const trasa = localStorage.getItem("trasa") || "";
+      const przewoznik = localStorage.getItem("przewoznik") || "";
       const tablica = localStorage.getItem("tablica") || "";
       const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
-      const typDostawy = document.querySelector('input[name="typDostawy"]:checked')?.value || "";
 
-      if (!login || !trasa || !tablica || codes.length === 0 || !typDostawy) {
+      if (!login || !trasa || !przewoznik || !tablica || codes.length === 0) {
         alert("Brakuje danych lub lista kodów jest pusta.");
         return;
       }
@@ -299,11 +293,11 @@
       const finalData = codes.map(c => `${c.value} | ${c.note}`);
 
       const formData = new FormData();
-      formData.append("login", login);
-      formData.append("trasa", trasa);
-      formData.append("tablica", tablica);
+      formData.append("login", login.toUpperCase());
+      formData.append("trasa", trasa.toUpperCase());
+      formData.append("przewoznik", przewoznik.toUpperCase());
+      formData.append("tablica", tablica.toUpperCase());
       formData.append("dodatkowe", dodatkoweInfo || "-");
-      formData.append("typDostawy", typDostawy);
       formData.append("kody", JSON.stringify(finalData));
       formData.append("strona", "wz");
 
@@ -316,6 +310,7 @@
       updateList();
 
       localStorage.removeItem("trasa");
+      localStorage.removeItem("przewoznik");
       localStorage.removeItem("tablica");
       localStorage.removeItem("tablicaSam");
       localStorage.removeItem("tablicaNacz");
@@ -336,8 +331,9 @@
 
       const login = localStorage.getItem("login") || "brak";
       const trasa = localStorage.getItem("trasa") || "brak";
+      const przewoznik = localStorage.getItem("przewoznik") || "brak";
       const tablica = localStorage.getItem("tablica") || "brak";
-      document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${tablica}`;
+      document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${przewoznik}  -  ${tablica}`;
 
       
       /*
