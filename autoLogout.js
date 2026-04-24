@@ -1,12 +1,34 @@
-document.addEventListener("DOMContentLoaded", () => {
+function wykonajWylogowanie() {
+  localStorage.clear();
+
+  if (!window.location.pathname.endsWith("index.html")) {
+    window.location.href = "index.html";
+  } else {
+    location.reload();
+  }
+}
+
+function ustawWylogowanieNa23() {
   const now = new Date();
   const hour = now.getHours();
 
-  // Wyloguj jeśli godzina to 20–23 lub 0–6
-  if (hour >= 20 || hour < 7) {
-    localStorage.clear();
-    if (!window.location.pathname.endsWith("index.html")) {
-      window.location.href = "index.html";
-    }
+  // Po 23:00 i przed 7:00 od razu wyloguj
+  if (hour >= 23 || hour < 7) {
+    wykonajWylogowanie();
+    return;
   }
+
+  // Ustaw wylogowanie dokładnie na 23:00
+  const logoutTime = new Date();
+  logoutTime.setHours(23, 0, 0, 0);
+
+  const timeToLogout = logoutTime - now;
+
+  setTimeout(() => {
+    wykonajWylogowanie();
+  }, timeToLogout);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  ustawWylogowanieNa23();
 });
