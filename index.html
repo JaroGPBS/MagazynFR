@@ -137,9 +137,10 @@
       <div id="form-section" class="hidden">
         <p>Witaj, <strong id="user-name"></strong>!</p>
 
-        <input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
-        <input type="text" id="tablicaSam" class="uppercase" placeholder="TABLICA REJESTRACYJNA SAMOCHODU" required autocomplete="off">
-        <input type="text" id="tablicaNacz" class="uppercase" placeholder="TABLICA REJESTRACYJNA NACZEPY" required autocomplete="off">
+<input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
+<input type="text" id="przewoznik" class="uppercase" placeholder="NAZWA FIRMY PRZEWOŹNIKA" required autocomplete="off">
+<input type="text" id="tablicaSam" class="uppercase" placeholder="TABLICA REJESTRACYJNA SAMOCHODU" required autocomplete="off">
+<input type="text" id="tablicaNacz" class="uppercase" placeholder="TABLICA REJESTRACYJNA NACZEPY" required autocomplete="off">
 
         <div class="buttons">
           <button onclick="goTo('pz.html')">Przyjęcie</button>
@@ -178,11 +179,12 @@
     }
 
     function goTo(destination) {
-      const trasa = document.getElementById("trasa").value.trim().toUpperCase();
-      const tablicaSam = document.getElementById("tablicaSam").value.trim().toUpperCase();
-      const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
+    const trasa = document.getElementById("trasa").value.trim().toUpperCase();
+    const przewoznik = document.getElementById("przewoznik").value.trim().toUpperCase();
+    const tablicaSam = document.getElementById("tablicaSam").value.trim().toUpperCase();
+    const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
 
-      if (!trasa || !tablicaSam || !tablicaNacz) {
+      if (!trasa || !przewoznik || !tablicaSam || !tablicaNacz) {
         alert("Proszę uzupełnić wszystkie pola.");
         return;
       }
@@ -192,6 +194,7 @@
 
       // zapisy w localStorage (zgodność wstecz + wygoda uzupełniania pól)
       localStorage.setItem("trasa", trasa);
+      localStorage.setItem("przewoznik", przewoznik);
       localStorage.setItem("tablica", tablicaCombined);   // tu przechowujemy połączoną wartość
       localStorage.setItem("tablicaSam", tablicaSam);     // osobno samochód
       localStorage.setItem("tablicaNacz", tablicaNacz);   // osobno naczepa
@@ -204,6 +207,7 @@
     function logout() {
       localStorage.removeItem("login");
       localStorage.removeItem("trasa");
+      localStorage.removeItem("przewoznik");
       localStorage.removeItem("tablica");
       localStorage.removeItem("tablicaSam");
       localStorage.removeItem("tablicaNacz");
@@ -221,14 +225,17 @@
 
     // Usuń zapisane wartości
     localStorage.removeItem("trasa");
+    localStorage.removeItem("przewoznik");
     localStorage.removeItem("tablicaSam");
     localStorage.removeItem("tablicaNacz");
 
     // Wyczyść widoczne pola (jeśli istnieją)
     const trasaEl  = document.getElementById("trasa");
+    const przewEl  = document.getElementById("przewoznik");
     const tabSamEl = document.getElementById("tablicaSam");
     const tabNacEl = document.getElementById("tablicaNacz");
     if (trasaEl)  trasaEl.value  = "";
+    if (przewEl)  przewEl.value  = "";
     if (tabSamEl) tabSamEl.value = "";
     if (tabNacEl) tabNacEl.value = "";
     }
@@ -236,6 +243,7 @@
   // --- Twój dotychczasowy kod (bez zmian) ---
   const login = localStorage.getItem("login");
   const trasa = localStorage.getItem("trasa");
+  const przewoznik = localStorage.getItem("przewoznik");
   const tablicaSam = localStorage.getItem("tablicaSam");
   const tablicaNacz = localStorage.getItem("tablicaNacz");
 
@@ -246,7 +254,7 @@
     document.querySelector("button[onclick='checkLogin()']").style.display = "none";
   }
 
-  if (trasa) document.getElementById("trasa").value = trasa;
+  if (przewoznik) document.getElementById("przewoznik").value = przewoznik;
   if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
   if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
 });
@@ -255,9 +263,11 @@
 window.addEventListener("pageshow", (ev) => {
   if (ev.persisted) {
     const trasaEl  = document.getElementById("trasa");
+    const przewEl  = document.getElementById("przewoznik");
     const tabSamEl = document.getElementById("tablicaSam");
     const tabNacEl = document.getElementById("tablicaNacz");
     if (trasaEl)  trasaEl.value  = "";
+    if (przewEl)  przewEl.value  = "";
     if (tabSamEl) tabSamEl.value = "";
     if (tabNacEl) tabNacEl.value = "";
   }
