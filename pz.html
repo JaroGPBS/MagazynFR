@@ -143,6 +143,28 @@
     <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
     <button onclick="sendData()">Wyślij dane</button>
     <p id="status"></p>
+    <div id="sendingOverlay" style="
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  text-align: center;
+">
+  <div style="
+    background: #333;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #666;
+  ">
+    ⏳ Wysyłanie danych...<br>
+    Proszę czekać.
+  </div>
+</div>
   </div>
 
   <div class="footer-logo">
@@ -272,6 +294,7 @@ function sendData() {
   }
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+  document.getElementById("sendingOverlay").style.display = "flex";
 
   const finalData = codes.map(c => {
     const kod = (c.value || "").toString().trim().toUpperCase();
@@ -305,8 +328,9 @@ function sendData() {
       window.location.href = "index.html";
     })
     .catch(err => {
-      document.getElementById("status").innerText = "❌ Błąd: " + err;
-    });
+  document.getElementById("sendingOverlay").style.display = "none";
+  document.getElementById("status").innerText = "❌ Błąd: " + err;
+});
 }
 
 document.addEventListener("DOMContentLoaded", () => {
