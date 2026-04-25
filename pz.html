@@ -426,15 +426,25 @@ function showPartsSection() {
   const section = document.getElementById("partsSection");
   const btn = document.getElementById("showPartsBtn");
 
-  section.classList.remove("hidden");
+  if (section.classList.contains("hidden")) {
+    section.classList.remove("hidden");
 
-  btn.style.height = "29px";
-  btn.style.fontSize = "0.8rem";
-  btn.style.margin = "12px 0 4px";
-  btn.style.padding = "0";
-  btn.style.display = "flex";
-  btn.style.alignItems = "center";
-  btn.style.justifyContent = "center";
+    btn.style.height = "29px";
+    btn.style.fontSize = "0.8rem";
+    btn.style.margin = "12px 0 4px";
+    btn.style.padding = "0";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+  } else {
+    section.classList.add("hidden");
+
+    btn.style.height = "48px";
+    btn.style.fontSize = "1rem";
+    btn.style.margin = "18px 0 8px";
+    btn.style.padding = "10px";
+    btn.style.display = "block";
+  }
 }
 
 function saveCodes() {
