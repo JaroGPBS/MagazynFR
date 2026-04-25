@@ -103,8 +103,7 @@
       cursor: not-allowed;
     }
 
-    #readerModul,
-    #readerPart {
+    #readerModul {
       width: 100%;
       max-width: 400px;
       margin: 16px auto;
@@ -188,14 +187,6 @@
       font-size: 1.1rem;
       font-weight: bold;
       color: #ffffff;
-    }
-
-    .parts-box {
-      background: #2a2a2a;
-      border: 1px solid #555;
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 8px;
     }
 
     .search-results {
@@ -291,6 +282,10 @@
       margin-top: 12px;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
     @media screen and (max-width: 600px) {
       .logo { font-size: 2rem; }
     }
@@ -338,28 +333,27 @@
 
     <ul id="codeList"></ul>
 
-    <!-- CZĘŚCI TEST -->
-    <div class="section-title">CZĘŚCI — TEST</div>
+    <!-- PRZYCISK CZĘŚCI -->
+    <button id="showPartsBtn" onclick="showPartsSection()" style="
+      width: 100%;
+      height: 48px;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #555;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 18px 0 8px;">
+      Części
+    </button>
 
-    <div class="parts-box">
+    <!-- CZĘŚCI TEST -->
+    <div id="partsSection" class="hidden">
+      <div class="section-title">CZĘŚCI — TEST</div>
+
       <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
       <div id="searchResults" class="search-results"></div>
-
-      <button id="startScanPartBtn" onclick="startPartScanning()" style="
-        width: 100%;
-        height: 48px;
-        font-size: 1rem;
-        font-weight: bold;
-        background-color: #2e7d32;
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        margin: 10px 0;" disabled>
-        Skanuj QR części
-      </button>
-
-      <div id="readerPart" style="display: none;"></div>
 
       <div class="list-header">
         <h3 style="margin:0;">Lista części</h3>
@@ -426,9 +420,12 @@ let listaCzesci = [];
 let selectedPart = null;
 
 let html5QrModul;
-let html5QrPart;
 let isModuleScanning = false;
-let isPartScanning = false;
+
+function showPartsSection() {
+  document.getElementById("partsSection").classList.remove("hidden");
+  document.getElementById("showPartsBtn").style.display = "none";
+}
 
 function saveCodes() {
   localStorage.setItem("codesPZ", JSON.stringify(codes));
@@ -553,7 +550,6 @@ function loadPartsBase() {
       bazaCzesci = Array.isArray(data.czesci) ? data.czesci : [];
 
       document.getElementById("searchInput").disabled = false;
-      document.getElementById("startScanPartBtn").disabled = false;
       document.getElementById("loadingOverlay").style.display = "none";
     })
     .catch(err => {
@@ -606,11 +602,6 @@ function searchParts() {
   });
 
   resultsBox.style.display = "block";
-}
-
-function findPartByIndex(indeks) {
-  const val = String(indeks || "").trim().toUpperCase();
-  return bazaCzesci.find(part => String(part.indeks || "").trim().toUpperCase() === val);
 }
 
 function openPartModal(part) {
@@ -868,69 +859,6 @@ function stopModuleScanning() {
     }).catch(err => {
       console.error("Błąd zatrzymania skanera:", err);
       isModuleScanning = false;
-    });
-  }
-}
-
-function startPartScanning() {
-  if (isPartScanning) return;
-  isPartScanning = true;
-
-  document.getElementById("startScanPartBtn").style.display = "none";
-  const readerDiv = document.getElementById("readerPart");
-  readerDiv.style.display = "block";
-  readerDiv.innerHTML = "";
-
-  html5QrPart = new Html5Qrcode("readerPart");
-
-  Html5Qrcode.getCameras().then(cameras => {
-    if (cameras && cameras.length) {
-      const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
-
-      html5QrPart.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
-        stopPartScanning();
-
-        const scanned = String(text || "").trim().toUpperCase();
-        const part = findPartByIndex(scanned);
-
-        if (!part) {
-          alert("Nie znaleziono części dla zeskanowanego kodu.");
-          return;
-        }
-
-        openPartModal(part);
-
-        if ("vibrate" in navigator) navigator.vibrate(200);
-
-        const beep = document.getElementById("beepSound");
-        if (beep) beep.play().catch(() => {});
-      });
-    } else {
-      alert("Nie wykryto kamery.");
-      isPartScanning = false;
-      document.getElementById("startScanPartBtn").style.display = "inline-block";
-      document.getElementById("readerPart").style.display = "none";
-    }
-  }).catch(err => {
-    alert("Błąd kamery: " + err);
-    isPartScanning = false;
-    document.getElementById("startScanPartBtn").style.display = "inline-block";
-    document.getElementById("readerPart").style.display = "none";
-  });
-}
-
-function stopPartScanning() {
-  if (html5QrPart && isPartScanning) {
-    html5QrPart.stop().then(() => {
-      html5QrPart.clear();
-      isPartScanning = false;
-      document.getElementById("readerPart").style.display = "none";
-      document.getElementById("startScanPartBtn").style.display = "inline-block";
-    }).catch(err => {
-      console.error("Błąd zatrzymania skanera części:", err);
-      isPartScanning = false;
-      document.getElementById("readerPart").style.display = "none";
-      document.getElementById("startScanPartBtn").style.display = "inline-block";
     });
   }
 }
