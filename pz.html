@@ -339,7 +339,7 @@
   <div id="readerModul" style="display: none;"></div>
 
   <div style="display: flex; gap: 8px; margin: 10px 0;">
-    <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
+    <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" oninput="formatManualSN(this)" style="flex: 1; padding: 4px; font-size: 1rem;">
     <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
   </div>
 
@@ -561,7 +561,21 @@ function updateList() {
     list.appendChild(li);
   });
 }
+function formatManualSN(input) {
+  let val = input.value.toUpperCase();
 
+  if (val.includes("/")) {
+    input.value = val;
+    return;
+  }
+
+  if (/^\d{2}$/.test(val)) {
+    input.value = val + "/";
+    return;
+  }
+
+  input.value = val;
+}
 function addManual() {
   const input = document.getElementById("manualInput");
   const val = input.value.trim().toUpperCase();
