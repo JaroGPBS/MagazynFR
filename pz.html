@@ -424,7 +424,11 @@ let isModuleScanning = false;
 
 function showPartsSection() {
   document.getElementById("partsSection").classList.remove("hidden");
-  document.getElementById("showPartsBtn").style.display = "none";
+
+  const btn = document.getElementById("showPartsBtn");
+  btn.style.height = "24px";
+  btn.style.fontSize = "0.75rem";
+  btn.style.margin = "12px 0 4px";
 }
 
 function saveCodes() {
