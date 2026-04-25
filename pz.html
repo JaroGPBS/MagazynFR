@@ -561,20 +561,31 @@ function updateList() {
     list.appendChild(li);
   });
 }
+let lastManualSN = "";
+
 function formatManualSN(input) {
   let val = input.value.toUpperCase();
 
+  const isDeleting = val.length < lastManualSN.length;
+
+  if (isDeleting) {
+    input.value = val;
+    lastManualSN = val;
+    return;
+  }
+
   if (val.includes("/")) {
     input.value = val;
+    lastManualSN = val;
     return;
   }
 
   if (/^\d{2}$/.test(val)) {
-    input.value = val + "/";
-    return;
+    val = val + "/";
   }
 
   input.value = val;
+  lastManualSN = val;
 }
 function addManual() {
   const input = document.getElementById("manualInput");
