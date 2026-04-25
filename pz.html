@@ -423,12 +423,18 @@ let html5QrModul;
 let isModuleScanning = false;
 
 function showPartsSection() {
-  document.getElementById("partsSection").classList.remove("hidden");
-
+  const section = document.getElementById("partsSection");
   const btn = document.getElementById("showPartsBtn");
-  btn.style.height = "24px";
-  btn.style.fontSize = "0.75rem";
+
+  section.classList.remove("hidden");
+
+  btn.style.height = "29px";
+  btn.style.fontSize = "0.8rem";
   btn.style.margin = "12px 0 4px";
+  btn.style.padding = "0";
+  btn.style.display = "flex";
+  btn.style.alignItems = "center";
+  btn.style.justifyContent = "center";
 }
 
 function saveCodes() {
