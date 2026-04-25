@@ -738,9 +738,19 @@
         name.className = "part-name";
         name.textContent = item.nazwa || "";
 
-        const qty = document.createElement("div");
+        const qty = document.createElement("input");
+        qty.type = "number";
+        qty.min = "1";
+        qty.value = Math.abs(Number(item.ilosc || 0));
         qty.className = "part-qty";
-        qty.textContent = String(Math.abs(Number(item.ilosc || 0)));
+
+        qty.oninput = () => {
+          const newQty = Number(qty.value || 0);
+          if (newQty > 0) {
+            listaCzesci[index].ilosc = -Math.abs(newQty);
+            savePartsList();
+          }
+        };
 
         const remove = document.createElement("span");
         remove.className = "remove-btn";
