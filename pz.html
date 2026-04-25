@@ -790,6 +790,7 @@ function sendData() {
   formData.append("tablica", tablica.toUpperCase());
   formData.append("dodatkowe", dodatkoweInfo || "-");
   formData.append("kody", JSON.stringify(finalData));
+  formData.append("czesci", JSON.stringify(listaCzesci));
   formData.append("strona", "pz");
 
   fetch(scriptURL, { method: "POST", body: formData })
