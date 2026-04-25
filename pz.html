@@ -7,8 +7,10 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
   <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
+
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 16px;
@@ -16,6 +18,7 @@
       font-family: sans-serif;
       color: #f5f5f5;
     }
+
     .form-wrapper {
       max-width: 500px;
       margin: auto;
@@ -28,18 +31,21 @@
       justify-content: space-between;
       min-height: 90vh;
     }
+
     .header-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 5px;
     }
+
     .logo {
       font-family: 'Informal Roman', cursive;
       color: #f9f9f9;
       font-size: 2.5rem;
       margin-left: 40px;
     }
+
     .back-button {
       width: 25%;
       min-width: 80px;
@@ -52,7 +58,9 @@
       cursor: pointer;
       text-align: center;
     }
+
     .back-button:hover { background-color: #777; }
+
     .data-display {
       font-size: 0.9rem;
       background-color: #444;
@@ -63,6 +71,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     input, button {
       width: 100%;
       padding: 10px;
@@ -71,40 +80,223 @@
       border: 1px solid #555;
       border-radius: 4px;
     }
+
     input {
       background-color: #222;
       color: #f5f5f5;
     }
+
     input::placeholder { color: #999; }
-    #reader { width: 100%; max-width: 400px; margin: 16px auto; }
-    #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
-    ul { list-style: none; padding: 0; }
+
+    button {
+      cursor: pointer;
+      background-color: #666;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+
+    button:hover { background-color: #777; }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #readerModul,
+    #readerPart {
+      width: 100%;
+      max-width: 400px;
+      margin: 16px auto;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
     li {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 0; border-bottom: 1px solid #666;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #666;
     }
+
     .note-input {
-      width: 22%; min-width: 50px; padding: 6px;
-      border: 1px solid #555; border-radius: 4px; font-size: 0.9rem;
-      text-transform: uppercase; background-color: #1c1c1c; color: #f5f5f5;
+      width: 22%;
+      min-width: 50px;
+      padding: 6px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      background-color: #1c1c1c;
+      color: #f5f5f5;
     }
+
     .code-text {
-      flex: 1; font-size: 0.95rem; word-break: break-word;
-      background-color: #1c1c1c; color: #f5f5f5; border: 1px solid #555; padding: 6px;
+      flex: 1;
+      font-size: 0.95rem;
+      word-break: break-word;
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      border: 1px solid #555;
+      padding: 6px;
     }
-    .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
-    .footer-logo { text-align: center; margin-top: 20px; }
-    .footer-logo img { width: 40%; max-width: 200px; height: auto; }
+
+    .remove-btn {
+      color: red;
+      cursor: pointer;
+      padding: 0 6px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .footer-logo {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .footer-logo img {
+      width: 40%;
+      max-width: 200px;
+      height: auto;
+    }
+
+    .list-header {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      display:inline-block;
+      padding:2px 8px;
+      border:1px solid #666;
+      border-radius:999px;
+      font-size:.85rem;
+      background:#222;
+      color:#f5f5f5;
+    }
+
+    .section-title {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid #555;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .parts-box {
+      background: #2a2a2a;
+      border: 1px solid #555;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    .search-results {
+      margin: 8px 0 14px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .result-item {
+      padding: 10px;
+      background: #222;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-item:hover {
+      background: #444;
+    }
+
+    .part-name {
+      flex: 1;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    .part-qty {
+      min-width: 55px;
+      text-align: center;
+      font-weight: bold;
+      padding: 6px;
+      border-radius: 6px;
+      background: #1c1c1c;
+      border: 1px solid #555;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 18px;
+    }
+
+    .overlay-box {
+      width: 100%;
+      max-width: 360px;
+      background: #333;
+      padding: 22px;
+      border-radius: 12px;
+      border: 1px solid #666;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+
+    .modal-part {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: #ddd;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .choice-row button {
+      flex: 1;
+      height: 46px;
+    }
+
+    .ok-btn {
+      background-color: #2e7d32;
+    }
+
+    .cancel-btn {
+      background-color: #555;
+      margin-top: 12px;
+    }
+
     @media screen and (max-width: 600px) {
       .logo { font-size: 2rem; }
     }
-    .list-header { display:flex; align-items:center; gap:8px; }
-    .badge {
-      display:inline-block; padding:2px 8px; border:1px solid #666; border-radius:999px;
-      font-size:.85rem; background:#222; color:#f5f5f5;
-    }
   </style>
 </head>
+
 <body>
 <div class="form-wrapper">
   <div>
@@ -115,22 +307,27 @@
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-<div id="scan-result" style="display: none;"></div>
-<div style="text-align: center; margin: 10px 0;">
-<button id="startScanBtn" onclick="startScanning()" style="
-  width: 100%; height: 50px;
-  font-size: 1rem; font-weight: bold;
-  background-color: #2e7d32; color: #fff;
-  border: none; border-radius: 12px;
-  cursor: pointer; margin: 10px 0;">
-  Skanuj
-</button>
+    <!-- MODUŁY -->
+    <div class="section-title">MODUŁY</div>
 
-</div>
-<div id="reader" style="display: none; width: 100%; max-width: 400px; margin: 16px auto;"></div>
+    <button id="startScanModulBtn" onclick="startModuleScanning()" style="
+      width: 100%;
+      height: 50px;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 10px 0;">
+      Skanuj moduł
+    </button>
+
+    <div id="readerModul" style="display: none;"></div>
 
     <div style="display: flex; gap: 8px; margin: 10px 0;">
-      <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
+      <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
       <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
     </div>
 
@@ -138,37 +335,79 @@
       <h3 style="margin:0;">Liczba modułów</h3>
       <span class="badge" id="codeCount">0</span>
     </div>
+
     <ul id="codeList"></ul>
 
+    <!-- CZĘŚCI TEST -->
+    <div class="section-title">CZĘŚCI — TEST</div>
+
+    <div class="parts-box">
+      <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
+      <div id="searchResults" class="search-results"></div>
+
+      <button id="startScanPartBtn" onclick="startPartScanning()" style="
+        width: 100%;
+        height: 48px;
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: #2e7d32;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        margin: 10px 0;" disabled>
+        Skanuj QR części
+      </button>
+
+      <div id="readerPart" style="display: none;"></div>
+
+      <div class="list-header">
+        <h3 style="margin:0;">Lista części</h3>
+        <span class="badge" id="partCount">0</span>
+      </div>
+
+      <ul id="partList"></ul>
+    </div>
+
     <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+
     <button onclick="sendData()">Wyślij dane</button>
     <p id="status"></p>
-    <div id="sendingOverlay" style="
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.2rem;
-  text-align: center;
-">
-  <div style="
-    background: #333;
-    padding: 24px;
-    border-radius: 12px;
-    border: 1px solid #666;
-  ">
-    ⏳ Wysyłanie danych...<br>
-    Proszę czekać.
-  </div>
-</div>
+
+    <div id="sendingOverlay" class="overlay">
+      <div class="overlay-box">
+        ⏳ Wysyłanie danych...<br>
+        Proszę czekać.
+      </div>
+    </div>
   </div>
 
   <div class="footer-logo">
     <img src="https://jarogpbs.github.io/MagazynFR/Jaro.png" alt="Created by Jaro">
+  </div>
+</div>
+
+<!-- ŁADOWANIE BAZY CZĘŚCI -->
+<div id="loadingOverlay" class="overlay" style="display:flex;">
+  <div class="overlay-box">
+    ⏳ Aktualizuję bazę części...<br>
+    Proszę czekać.
+  </div>
+</div>
+
+<!-- ILOŚĆ CZĘŚCI -->
+<div id="partModal" class="overlay">
+  <div class="overlay-box">
+    <div class="modal-title">Ilość części</div>
+    <div id="modalPartName" class="modal-part"></div>
+
+    <input type="number" id="modalQty" min="1" value="1" placeholder="ILOŚĆ">
+
+    <div class="choice-row">
+      <button class="ok-btn" onclick="confirmPart()">OK</button>
+    </div>
+
+    <button class="cancel-btn" onclick="closePartModal()">Anuluj</button>
   </div>
 </div>
 
@@ -179,7 +418,17 @@ function goBack() {
 
 const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","BQ"];
 const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
+
 let codes = [];
+
+let bazaCzesci = [];
+let listaCzesci = [];
+let selectedPart = null;
+
+let html5QrModul;
+let html5QrPart;
+let isModuleScanning = false;
+let isPartScanning = false;
 
 function saveCodes() {
   localStorage.setItem("codesPZ", JSON.stringify(codes));
@@ -188,6 +437,7 @@ function saveCodes() {
 function updateList() {
   const list = document.getElementById("codeList");
   const count = document.getElementById("codeCount");
+
   list.innerHTML = "";
   count.textContent = String(codes.length);
 
@@ -201,6 +451,7 @@ function updateList() {
     inputNote.value = item.note || "";
     inputNote.setAttribute("list", "typList");
     inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
+
     inputNote.oninput = () => {
       const val = inputNote.value.toUpperCase().trim();
       inputNote.value = val;
@@ -213,6 +464,7 @@ function updateList() {
     codeText.type = "text";
     codeText.value = item.value;
     codeText.className = "code-text";
+
     codeText.oninput = () => {
       codes[index].value = codeText.value.toUpperCase().trim();
       saveCodes();
@@ -224,6 +476,7 @@ function updateList() {
     nokCheckbox.style.width = "18px";
     nokCheckbox.style.height = "18px";
     nokCheckbox.style.cursor = "pointer";
+
     nokCheckbox.onchange = () => {
       codes[index].nok = nokCheckbox.checked;
       saveCodes();
@@ -254,16 +507,20 @@ function updateList() {
 function addManual() {
   const input = document.getElementById("manualInput");
   const val = input.value.trim().toUpperCase();
+
   if (!val || val.length < 3) {
     alert("Kod zbyt krótki lub pusty.");
     return;
   }
+
   const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+
   if (!exists) {
     codes.unshift({ value: val, note: "", nok: false });
     saveCodes();
     updateList();
   }
+
   input.value = "";
 }
 
@@ -271,6 +528,175 @@ function removeCode(index) {
   codes.splice(index, 1);
   saveCodes();
   updateList();
+}
+
+function normalizeText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function loadPartsBase() {
+  document.getElementById("loadingOverlay").style.display = "flex";
+
+  fetch(scriptURL + "?akcja=bazaCzesci")
+    .then(res => res.json())
+    .then(data => {
+      if (!data.ok) {
+        document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("status").innerText = "❌ " + (data.error || "Nie udało się pobrać bazy części.");
+        return;
+      }
+
+      bazaCzesci = Array.isArray(data.czesci) ? data.czesci : [];
+
+      document.getElementById("searchInput").disabled = false;
+      document.getElementById("startScanPartBtn").disabled = false;
+      document.getElementById("loadingOverlay").style.display = "none";
+    })
+    .catch(err => {
+      document.getElementById("loadingOverlay").style.display = "none";
+      document.getElementById("status").innerText = "❌ Nie udało się pobrać bazy części.";
+    });
+}
+
+function searchParts() {
+  const input = document.getElementById("searchInput");
+  const resultsBox = document.getElementById("searchResults");
+  const query = normalizeText(input.value);
+
+  resultsBox.innerHTML = "";
+
+  if (query.length < 2) {
+    resultsBox.style.display = "none";
+    return;
+  }
+
+  const results = bazaCzesci
+    .filter(part => {
+      const nazwa = normalizeText(part.nazwa);
+      const indeks = normalizeText(part.indeks);
+      return nazwa.includes(query) || indeks.includes(query);
+    })
+    .slice(0, 20);
+
+  if (results.length === 0) {
+    resultsBox.style.display = "block";
+    const empty = document.createElement("div");
+    empty.className = "result-item";
+    empty.textContent = "Brak wyników";
+    resultsBox.appendChild(empty);
+    return;
+  }
+
+  results.forEach(part => {
+    const div = document.createElement("div");
+    div.className = "result-item";
+    div.textContent = part.nazwa;
+
+    div.onclick = () => {
+      resultsBox.style.display = "none";
+      input.value = "";
+      openPartModal(part);
+    };
+
+    resultsBox.appendChild(div);
+  });
+
+  resultsBox.style.display = "block";
+}
+
+function findPartByIndex(indeks) {
+  const val = String(indeks || "").trim().toUpperCase();
+  return bazaCzesci.find(part => String(part.indeks || "").trim().toUpperCase() === val);
+}
+
+function openPartModal(part) {
+  selectedPart = part;
+  document.getElementById("modalPartName").textContent = part.nazwa;
+  document.getElementById("modalQty").value = 1;
+  document.getElementById("partModal").style.display = "flex";
+}
+
+function closePartModal() {
+  selectedPart = null;
+  document.getElementById("partModal").style.display = "none";
+}
+
+function confirmPart() {
+  if (!selectedPart) return;
+
+  const qty = Number(document.getElementById("modalQty").value || 0);
+
+  if (!qty || qty <= 0) {
+    alert("Podaj ilość większą od zera.");
+    return;
+  }
+
+  addPartToList({
+    indeks: selectedPart.indeks,
+    nazwa: selectedPart.nazwa,
+    ilosc: qty
+  });
+
+  closePartModal();
+}
+
+function addPartToList(part) {
+  const existing = listaCzesci.find(item =>
+    String(item.indeks || "").trim().toUpperCase() === String(part.indeks || "").trim().toUpperCase()
+  );
+
+  if (existing) {
+    existing.ilosc = Number(existing.ilosc || 0) + Number(part.ilosc || 0);
+  } else {
+    listaCzesci.unshift(part);
+  }
+
+  savePartsList();
+  updatePartsList();
+}
+
+function savePartsList() {
+  localStorage.setItem("partsPZTest", JSON.stringify(listaCzesci));
+}
+
+function updatePartsList() {
+  const list = document.getElementById("partList");
+  const count = document.getElementById("partCount");
+
+  list.innerHTML = "";
+  count.textContent = String(listaCzesci.length);
+
+  listaCzesci.forEach((item, index) => {
+    const li = document.createElement("li");
+
+    const name = document.createElement("div");
+    name.className = "part-name";
+    name.textContent = item.nazwa || "";
+
+    const qty = document.createElement("div");
+    qty.className = "part-qty";
+    qty.textContent = String(item.ilosc || 0);
+
+    const remove = document.createElement("span");
+    remove.className = "remove-btn";
+    remove.textContent = "✕";
+    remove.title = "Usuń";
+
+    remove.onclick = () => {
+      listaCzesci.splice(index, 1);
+      savePartsList();
+      updatePartsList();
+    };
+
+    li.appendChild(name);
+    li.appendChild(qty);
+    li.appendChild(remove);
+    list.appendChild(li);
+  });
 }
 
 function sendData() {
@@ -281,12 +707,13 @@ function sendData() {
   const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
 
   if (!login || !trasa || !przewoznik || !tablica || codes.length === 0) {
-    alert("Brakuje danych lub lista kodów jest pusta.");
+    alert("Brakuje danych lub lista modułów jest pusta.");
     return;
   }
 
   for (const c of codes) {
     const typ = (c.note || "").toString().trim().toUpperCase();
+
     if (!allowed.includes(typ)) {
       alert(`Nieprawidłowy TYP: "${typ}". Wybierz z listy.`);
       return;
@@ -294,6 +721,7 @@ function sendData() {
   }
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+
   document.getElementById("sendingOverlay").style.display = "flex";
 
   const finalData = codes.map(c => {
@@ -316,28 +744,37 @@ function sendData() {
     .then(res => res.text())
     .then(txt => {
       alert("✅ Dane wysłane.");
+
       codes = [];
       localStorage.removeItem("codesPZ");
       updateList();
+
+      localStorage.removeItem("partsPZTest");
+      listaCzesci = [];
+      updatePartsList();
+
       localStorage.removeItem("trasa");
       localStorage.removeItem("przewoznik");
       localStorage.removeItem("tablica");
       localStorage.removeItem("tablicaSam");
       localStorage.removeItem("tablicaNacz");
+
       sessionStorage.setItem("clearInputsAfterSend", "1");
       window.location.href = "index.html";
     })
     .catch(err => {
-  document.getElementById("sendingOverlay").style.display = "none";
-  document.getElementById("status").innerText = "❌ Błąd: " + err;
-});
+      document.getElementById("sendingOverlay").style.display = "none";
+      document.getElementById("status").innerText = "❌ Błąd: " + err;
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   const savedCodes = localStorage.getItem("codesPZ");
+
   if (savedCodes) {
     try {
       const parsed = JSON.parse(savedCodes);
+
       codes = Array.isArray(parsed)
         ? parsed.map(it => {
             const note = (it.note ?? it.typ ?? "").toString().toUpperCase().trim();
@@ -345,84 +782,158 @@ document.addEventListener("DOMContentLoaded", () => {
             return { value, note, nok: !!it.nok };
           })
         : [];
+
       localStorage.setItem("codesPZ", JSON.stringify(codes));
     } catch {
       codes = [];
     }
   }
+
   updateList();
+
+  const savedParts = localStorage.getItem("partsPZTest");
+
+  if (savedParts) {
+    try {
+      const parsed = JSON.parse(savedParts);
+      listaCzesci = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      listaCzesci = [];
+    }
+  }
+
+  updatePartsList();
 
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const przewoznik = localStorage.getItem("przewoznik") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
+
   document.getElementById("daneUzytkownika").innerText = `${login}  -  ${trasa}  -  ${przewoznik}  -  ${tablica}`;
+
+  document.getElementById("searchInput").addEventListener("input", searchParts);
+
+  loadPartsBase();
 });
 
-let html5Qr;
-let isScanning = false;
+function startModuleScanning() {
+  if (isModuleScanning) return;
+  isModuleScanning = true;
 
-function startScanning() {
-  if (isScanning) return;
-  isScanning = true;
-
-  // Ukryj przycisk, pokaż skaner
-  document.getElementById("startScanBtn").style.display = "none";
-  const readerDiv = document.getElementById("reader");
+  document.getElementById("startScanModulBtn").style.display = "none";
+  const readerDiv = document.getElementById("readerModul");
   readerDiv.style.display = "block";
   readerDiv.innerHTML = "";
 
-  document.getElementById("scan-result").innerText = "Skanowanie...";
-
-  html5Qr = new Html5Qrcode("reader");
+  html5QrModul = new Html5Qrcode("readerModul");
 
   Html5Qrcode.getCameras().then(cameras => {
     if (cameras && cameras.length) {
       const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
 
-      html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
-        stopScanning();
+      html5QrModul.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+        stopModuleScanning();
 
         const val = (text || "").toUpperCase().trim();
         const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+
         if (!exists && val) {
           codes.unshift({ value: val, note: "", nok: false });
           saveCodes();
           updateList();
         }
 
-        document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
-
         if ("vibrate" in navigator) navigator.vibrate(200);
+
         const beep = document.getElementById("beepSound");
         if (beep) beep.play().catch(() => {});
       });
     } else {
-      document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
-      isScanning = false;
+      alert("Nie wykryto kamery.");
+      isModuleScanning = false;
     }
   }).catch(err => {
-    document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
-    isScanning = false;
+    alert("Błąd kamery: " + err);
+    isModuleScanning = false;
   });
 }
 
-
-function stopScanning() {
-  if (html5Qr && isScanning) {
-    html5Qr.stop().then(() => {
-      html5Qr.clear();
-      isScanning = false;
-      document.getElementById("reader").style.display = "none";
-      document.getElementById("startScanBtn").style.display = "inline-block";
-      document.getElementById("scan-result").innerText = "Zeskanuj kod QR...";
+function stopModuleScanning() {
+  if (html5QrModul && isModuleScanning) {
+    html5QrModul.stop().then(() => {
+      html5QrModul.clear();
+      isModuleScanning = false;
+      document.getElementById("readerModul").style.display = "none";
+      document.getElementById("startScanModulBtn").style.display = "inline-block";
     }).catch(err => {
       console.error("Błąd zatrzymania skanera:", err);
-      isScanning = false;
+      isModuleScanning = false;
     });
   }
 }
 
+function startPartScanning() {
+  if (isPartScanning) return;
+  isPartScanning = true;
+
+  document.getElementById("startScanPartBtn").style.display = "none";
+  const readerDiv = document.getElementById("readerPart");
+  readerDiv.style.display = "block";
+  readerDiv.innerHTML = "";
+
+  html5QrPart = new Html5Qrcode("readerPart");
+
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras && cameras.length) {
+      const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
+
+      html5QrPart.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+        stopPartScanning();
+
+        const scanned = String(text || "").trim().toUpperCase();
+        const part = findPartByIndex(scanned);
+
+        if (!part) {
+          alert("Nie znaleziono części dla zeskanowanego kodu.");
+          return;
+        }
+
+        openPartModal(part);
+
+        if ("vibrate" in navigator) navigator.vibrate(200);
+
+        const beep = document.getElementById("beepSound");
+        if (beep) beep.play().catch(() => {});
+      });
+    } else {
+      alert("Nie wykryto kamery.");
+      isPartScanning = false;
+      document.getElementById("startScanPartBtn").style.display = "inline-block";
+      document.getElementById("readerPart").style.display = "none";
+    }
+  }).catch(err => {
+    alert("Błąd kamery: " + err);
+    isPartScanning = false;
+    document.getElementById("startScanPartBtn").style.display = "inline-block";
+    document.getElementById("readerPart").style.display = "none";
+  });
+}
+
+function stopPartScanning() {
+  if (html5QrPart && isPartScanning) {
+    html5QrPart.stop().then(() => {
+      html5QrPart.clear();
+      isPartScanning = false;
+      document.getElementById("readerPart").style.display = "none";
+      document.getElementById("startScanPartBtn").style.display = "inline-block";
+    }).catch(err => {
+      console.error("Błąd zatrzymania skanera części:", err);
+      isPartScanning = false;
+      document.getElementById("readerPart").style.display = "none";
+      document.getElementById("startScanPartBtn").style.display = "inline-block";
+    });
+  }
+}
 </script>
 
 <datalist id="typList">
@@ -444,36 +955,22 @@ function stopScanning() {
 </datalist>
 
 <script src="autoLogout.js"></script>
+
 <script>
-  function reloadAtMidnight() {
-    const now = new Date();
-    const midnight = new Date();
-    midnight.setHours(24, 0, 0, 0);
+function reloadAtMidnight() {
+  const now = new Date();
+  const midnight = new Date();
+  midnight.setHours(24, 0, 0, 0);
 
-    const timeToMidnight = midnight - now;
+  const timeToMidnight = midnight - now;
 
-    setTimeout(() => {
-      window.location.reload(true);
-    }, timeToMidnight);
-  }
+  setTimeout(() => {
+    window.location.reload(true);
+  }, timeToMidnight);
+}
 
-  reloadAtMidnight();
+reloadAtMidnight();
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
