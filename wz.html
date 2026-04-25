@@ -71,18 +71,6 @@
       text-overflow: ellipsis;
     }
 
-    #reader {
-      width: 100%;
-      max-width: 400px;
-      margin: 16px auto;
-    }
-
-    #scan-result {
-      text-align: center;
-      color: #00ff00;
-      margin-bottom: 12px;
-    }
-
     input, button {
       width: 100%;
       padding: 10px;
@@ -107,6 +95,17 @@
 
     button:hover {
       background-color: #777;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #readerModul {
+      width: 100%;
+      max-width: 400px;
+      margin: 16px auto;
     }
 
     ul {
@@ -146,6 +145,7 @@
       cursor: pointer;
       font-weight: bold;
       padding: 0 6px;
+      font-size: 1.2rem;
     }
 
     .footer-logo {
@@ -163,6 +163,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-top: 10px;
     }
 
     .badge {
@@ -175,6 +176,54 @@
       color: #f5f5f5;
     }
 
+    .section-title {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid #555;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .search-results {
+      margin: 8px 0 14px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .result-item {
+      padding: 10px;
+      background: #222;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-item:hover {
+      background: #444;
+    }
+
+    .part-name {
+      flex: 1;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    .part-qty {
+      min-width: 55px;
+      text-align: center;
+      font-weight: bold;
+      padding: 6px;
+      border-radius: 6px;
+      background: #1c1c1c;
+      border: 1px solid #555;
+    }
+
     .overlay {
       display: none;
       position: fixed;
@@ -184,15 +233,53 @@
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 1.2rem;
       text-align: center;
+      padding: 18px;
     }
 
     .overlay-box {
+      width: 100%;
+      max-width: 360px;
       background: #333;
-      padding: 24px;
+      padding: 22px;
       border-radius: 12px;
       border: 1px solid #666;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+
+    .modal-part {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: #ddd;
+    }
+
+    .choice-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .choice-row button {
+      flex: 1;
+      height: 46px;
+    }
+
+    .ok-btn {
+      background-color: #2e7d32;
+    }
+
+    .cancel-btn {
+      background-color: #555;
+      margin-top: 12px;
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
@@ -207,35 +294,83 @@
 
       <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-      <div id="scan-result" style="display: none;"></div>
-
-      <button id="startScanBtn" onclick="startScanning()" style="
+      <!-- PRZYCISK MODUŁY -->
+      <button id="showModulesBtn" onclick="showModulesSection()" style="
         width: 100%;
-        height: 50px;
+        height: 48px;
         font-size: 1rem;
         font-weight: bold;
-        background-color: #2e7d32;
+        background-color: #555;
         color: #fff;
         border: none;
         border-radius: 12px;
         cursor: pointer;
-        margin: 10px 0;">
-        Skanuj
+        margin: 10px 0 8px;">
+        Moduły
       </button>
 
-      <div id="reader" style="display: none; width: 100%; max-width: 400px; margin: 16px auto;"></div>
+      <!-- MODUŁY -->
+      <div id="modulesSection" class="hidden">
+        <div class="section-title">MODUŁY</div>
 
-      <div style="display: flex; gap: 8px; margin: 10px 0;">
-        <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" oninput="formatManualSN(this)" style="flex: 1; padding: 4px; font-size: 1rem;">
-        <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
+        <button id="startScanModulBtn" onclick="startModuleScanning()" style="
+          width: 100%;
+          height: 50px;
+          font-size: 1rem;
+          font-weight: bold;
+          background-color: #2e7d32;
+          color: #fff;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          margin: 10px 0;">
+          Skanuj moduł
+        </button>
+
+        <div id="readerModul" style="display: none;"></div>
+
+        <div style="display: flex; gap: 8px; margin: 10px 0;">
+          <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" oninput="formatManualSN(this)" style="flex: 1; padding: 4px; font-size: 1rem;">
+          <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
+        </div>
+
+        <div class="list-header">
+          <h3 style="margin:0; font-size:0.95rem;">Lista kodów</h3>
+          <span class="badge" id="codeCount">0</span>
+        </div>
+
+        <ul id="codeList"></ul>
       </div>
 
-      <div class="list-header">
-        <h3 style="margin:0; font-size:0.95rem;">Lista kodów</h3>
-        <span class="badge" id="codeCount">0</span>
-      </div>
+      <!-- PRZYCISK CZĘŚCI -->
+      <button id="showPartsBtn" onclick="showPartsSection()" style="
+        width: 100%;
+        height: 48px;
+        font-size: 1rem;
+        font-weight: bold;
+        background-color: #555;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        margin: 18px 0 8px;">
+        Części
+      </button>
 
-      <ul id="codeList"></ul>
+      <!-- CZĘŚCI -->
+      <div id="partsSection" class="hidden">
+        <div class="section-title">CZĘŚCI</div>
+
+        <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
+        <div id="searchResults" class="search-results"></div>
+
+        <div class="list-header">
+          <h3 style="margin:0; font-size:0.95rem;">Lista części</h3>
+          <span class="badge" id="partCount">0</span>
+        </div>
+
+        <ul id="partList"></ul>
+      </div>
 
       <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
 
@@ -255,6 +390,30 @@
     </div>
   </div>
 
+  <!-- ŁADOWANIE BAZY CZĘŚCI -->
+  <div id="loadingOverlay" class="overlay" style="display:flex;">
+    <div class="overlay-box">
+      ⏳ Aktualizuję bazę części...<br>
+      Proszę czekać.
+    </div>
+  </div>
+
+  <!-- ILOŚĆ CZĘŚCI -->
+  <div id="partModal" class="overlay">
+    <div class="overlay-box">
+      <div class="modal-title">Ilość części</div>
+      <div id="modalPartName" class="modal-part"></div>
+
+      <input type="number" id="modalQty" min="1" value="1" placeholder="ILOŚĆ">
+
+      <div class="choice-row">
+        <button class="ok-btn" onclick="confirmPart()">OK</button>
+      </div>
+
+      <button class="cancel-btn" onclick="closePartModal()">Anuluj</button>
+    </div>
+  </div>
+
   <script>
     function goBack() {
       window.location.href = "index.html";
@@ -268,9 +427,64 @@
     ];
 
     let codes = [];
-    let html5Qr;
-    let isScanning = false;
+
+    let bazaCzesci = [];
+    let listaCzesci = [];
+    let selectedPart = null;
+
+    let html5QrModul;
+    let isModuleScanning = false;
     let lastManualSN = "";
+
+    function showModulesSection() {
+      const section = document.getElementById("modulesSection");
+      const btn = document.getElementById("showModulesBtn");
+
+      if (section.classList.contains("hidden")) {
+        section.classList.remove("hidden");
+
+        btn.style.height = "29px";
+        btn.style.fontSize = "0.8rem";
+        btn.style.margin = "12px 0 4px";
+        btn.style.padding = "0";
+        btn.style.display = "flex";
+        btn.style.alignItems = "center";
+        btn.style.justifyContent = "center";
+      } else {
+        section.classList.add("hidden");
+
+        btn.style.height = "48px";
+        btn.style.fontSize = "1rem";
+        btn.style.margin = "10px 0 8px";
+        btn.style.padding = "10px";
+        btn.style.display = "block";
+      }
+    }
+
+    function showPartsSection() {
+      const section = document.getElementById("partsSection");
+      const btn = document.getElementById("showPartsBtn");
+
+      if (section.classList.contains("hidden")) {
+        section.classList.remove("hidden");
+
+        btn.style.height = "29px";
+        btn.style.fontSize = "0.8rem";
+        btn.style.margin = "12px 0 4px";
+        btn.style.padding = "0";
+        btn.style.display = "flex";
+        btn.style.alignItems = "center";
+        btn.style.justifyContent = "center";
+      } else {
+        section.classList.add("hidden");
+
+        btn.style.height = "48px";
+        btn.style.fontSize = "1rem";
+        btn.style.margin = "18px 0 8px";
+        btn.style.padding = "10px";
+        btn.style.display = "block";
+      }
+    }
 
     function formatManualSN(input) {
       let val = input.value.toUpperCase();
@@ -297,6 +511,10 @@
       lastManualSN = val;
     }
 
+    function saveCodes() {
+      localStorage.setItem("codesWZ", JSON.stringify(codes));
+    }
+
     function updateList() {
       const list = document.getElementById("codeList");
       const count = document.getElementById("codeCount");
@@ -320,7 +538,7 @@
           inputNote.value = val;
           codes[index].note = val;
           inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
-          localStorage.setItem("codesWZ", JSON.stringify(codes));
+          saveCodes();
         };
 
         const codeText = document.createElement("input");
@@ -330,7 +548,7 @@
 
         codeText.oninput = () => {
           codes[index].value = codeText.value.toUpperCase().trim();
-          localStorage.setItem("codesWZ", JSON.stringify(codes));
+          saveCodes();
         };
 
         const remove = document.createElement("span");
@@ -339,7 +557,7 @@
         remove.title = "Usuń";
         remove.onclick = () => {
           codes.splice(index, 1);
-          localStorage.setItem("codesWZ", JSON.stringify(codes));
+          saveCodes();
           updateList();
         };
 
@@ -349,7 +567,7 @@
         list.appendChild(li);
       });
 
-      localStorage.setItem("codesWZ", JSON.stringify(codes));
+      saveCodes();
     }
 
     function addManual() {
@@ -365,7 +583,7 @@
 
       if (!exists) {
         codes.unshift({ value: val, note: "" });
-        localStorage.setItem("codesWZ", JSON.stringify(codes));
+        saveCodes();
         updateList();
       }
 
@@ -373,20 +591,184 @@
       lastManualSN = "";
     }
 
+    function normalizeText(text) {
+      return String(text || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function loadPartsBase() {
+      document.getElementById("loadingOverlay").style.display = "flex";
+
+      fetch(scriptURL + "?akcja=bazaCzesci")
+        .then(res => res.json())
+        .then(data => {
+          if (!data.ok) {
+            document.getElementById("loadingOverlay").style.display = "none";
+            document.getElementById("status").innerText = "❌ " + (data.error || "Nie udało się pobrać bazy części.");
+            return;
+          }
+
+          bazaCzesci = Array.isArray(data.czesci) ? data.czesci : [];
+
+          document.getElementById("searchInput").disabled = false;
+          document.getElementById("loadingOverlay").style.display = "none";
+        })
+        .catch(err => {
+          document.getElementById("loadingOverlay").style.display = "none";
+          document.getElementById("status").innerText = "❌ Nie udało się pobrać bazy części.";
+        });
+    }
+
+    function searchParts() {
+      const input = document.getElementById("searchInput");
+      const resultsBox = document.getElementById("searchResults");
+      const query = normalizeText(input.value);
+
+      resultsBox.innerHTML = "";
+
+      if (query.length < 2) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const results = bazaCzesci
+        .filter(part => {
+          const nazwa = normalizeText(part.nazwa);
+          const indeks = normalizeText(part.indeks);
+          return nazwa.includes(query) || indeks.includes(query);
+        })
+        .slice(0, 20);
+
+      if (results.length === 0) {
+        resultsBox.style.display = "block";
+        const empty = document.createElement("div");
+        empty.className = "result-item";
+        empty.textContent = "Brak wyników";
+        resultsBox.appendChild(empty);
+        return;
+      }
+
+      results.forEach(part => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.textContent = part.nazwa;
+
+        div.onclick = () => {
+          resultsBox.style.display = "none";
+          input.value = "";
+          openPartModal(part);
+        };
+
+        resultsBox.appendChild(div);
+      });
+
+      resultsBox.style.display = "block";
+    }
+
+    function openPartModal(part) {
+      selectedPart = part;
+      document.getElementById("modalPartName").textContent = part.nazwa;
+      document.getElementById("modalQty").value = 1;
+      document.getElementById("partModal").style.display = "flex";
+    }
+
+    function closePartModal() {
+      selectedPart = null;
+      document.getElementById("partModal").style.display = "none";
+    }
+
+    function confirmPart() {
+      if (!selectedPart) return;
+
+      const qty = Number(document.getElementById("modalQty").value || 0);
+
+      if (!qty || qty <= 0) {
+        alert("Podaj ilość większą od zera.");
+        return;
+      }
+
+      addPartToList({
+        indeks: selectedPart.indeks,
+        nazwa: selectedPart.nazwa,
+        ilosc: -Math.abs(qty)
+      });
+
+      closePartModal();
+    }
+
+    function addPartToList(part) {
+      const existing = listaCzesci.find(item =>
+        String(item.indeks || "").trim().toUpperCase() === String(part.indeks || "").trim().toUpperCase()
+      );
+
+      if (existing) {
+        existing.ilosc = Number(existing.ilosc || 0) + Number(part.ilosc || 0);
+
+        if (existing.ilosc === 0) {
+          listaCzesci = listaCzesci.filter(item =>
+            String(item.indeks || "").trim().toUpperCase() !== String(part.indeks || "").trim().toUpperCase()
+          );
+        }
+      } else {
+        listaCzesci.unshift(part);
+      }
+
+      savePartsList();
+      updatePartsList();
+    }
+
+    function savePartsList() {
+      localStorage.setItem("partsWZ", JSON.stringify(listaCzesci));
+    }
+
+    function updatePartsList() {
+      const list = document.getElementById("partList");
+      const count = document.getElementById("partCount");
+
+      list.innerHTML = "";
+      count.textContent = String(listaCzesci.length);
+
+      listaCzesci.forEach((item, index) => {
+        const li = document.createElement("li");
+
+        const name = document.createElement("div");
+        name.className = "part-name";
+        name.textContent = item.nazwa || "";
+
+        const qty = document.createElement("div");
+        qty.className = "part-qty";
+        qty.textContent = String(Math.abs(Number(item.ilosc || 0)));
+
+        const remove = document.createElement("span");
+        remove.className = "remove-btn";
+        remove.textContent = "✕";
+        remove.title = "Usuń";
+
+        remove.onclick = () => {
+          listaCzesci.splice(index, 1);
+          savePartsList();
+          updatePartsList();
+        };
+
+        li.appendChild(name);
+        li.appendChild(qty);
+        li.appendChild(remove);
+        list.appendChild(li);
+      });
+    }
+
     function sendData() {
-      if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
-
-      document.getElementById("sendingOverlay").style.display = "flex";
-
       const login = localStorage.getItem("login") || "";
       const trasa = localStorage.getItem("trasa") || "";
       const przewoznik = localStorage.getItem("przewoznik") || "";
       const tablica = localStorage.getItem("tablica") || "";
       const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
 
-      if (!login || !trasa || !przewoznik || !tablica || codes.length === 0) {
-        document.getElementById("sendingOverlay").style.display = "none";
-        alert("Brakuje danych lub lista kodów jest pusta.");
+      if (!login || !trasa || !przewoznik || !tablica || (codes.length === 0 && listaCzesci.length === 0)) {
+        alert("Brakuje danych lub lista modułów/części jest pusta.");
         return;
       }
 
@@ -394,11 +776,14 @@
         const typ = (c.note || "").toString().trim().toUpperCase();
 
         if (!allowed.includes(typ)) {
-          document.getElementById("sendingOverlay").style.display = "none";
           alert(`Nieprawidłowy TYP: "${typ}". Wybierz z listy.`);
           return;
         }
       }
+
+      if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+
+      document.getElementById("sendingOverlay").style.display = "flex";
 
       const finalData = codes.map(c => {
         const kod = (c.value || "").toString().trim().toUpperCase();
@@ -413,6 +798,7 @@
       formData.append("tablica", tablica.toUpperCase());
       formData.append("dodatkowe", dodatkoweInfo || "-");
       formData.append("kody", JSON.stringify(finalData));
+      formData.append("czesci", JSON.stringify(listaCzesci));
       formData.append("strona", "wz");
 
       fetch(scriptURL, { method: "POST", body: formData })
@@ -423,6 +809,10 @@
           codes = [];
           localStorage.removeItem("codesWZ");
           updateList();
+
+          listaCzesci = [];
+          localStorage.removeItem("partsWZ");
+          updatePartsList();
 
           localStorage.removeItem("trasa");
           localStorage.removeItem("przewoznik");
@@ -445,6 +835,7 @@
       if (savedCodes) {
         try {
           const parsed = JSON.parse(savedCodes);
+
           codes = Array.isArray(parsed)
             ? parsed.map(it => {
                 const note = (it.note ?? it.typ ?? "").toString().toUpperCase().trim();
@@ -452,14 +843,27 @@
                 return { value, note };
               })
             : [];
+
+          localStorage.setItem("codesWZ", JSON.stringify(codes));
         } catch {
           codes = [];
         }
-
-        updateList();
-      } else {
-        updateList();
       }
+
+      updateList();
+
+      const savedParts = localStorage.getItem("partsWZ");
+
+      if (savedParts) {
+        try {
+          const parsed = JSON.parse(savedParts);
+          listaCzesci = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          listaCzesci = [];
+        }
+      }
+
+      updatePartsList();
 
       const login = localStorage.getItem("login") || "brak";
       const trasa = localStorage.getItem("trasa") || "brak";
@@ -467,33 +871,37 @@
       const tablica = localStorage.getItem("tablica") || "brak";
 
       document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${przewoznik}  -  ${tablica}`;
+
+      document.getElementById("searchInput").addEventListener("input", searchParts);
+
+      loadPartsBase();
     });
 
-    function startScanning() {
-      if (isScanning) return;
-      isScanning = true;
+    function startModuleScanning() {
+      if (isModuleScanning) return;
+      isModuleScanning = true;
 
-      document.getElementById("startScanBtn").style.display = "none";
+      document.getElementById("startScanModulBtn").style.display = "none";
 
-      const readerDiv = document.getElementById("reader");
+      const readerDiv = document.getElementById("readerModul");
       readerDiv.style.display = "block";
       readerDiv.innerHTML = "";
 
-      html5Qr = new Html5Qrcode("reader");
+      html5QrModul = new Html5Qrcode("readerModul");
 
       Html5Qrcode.getCameras().then(cameras => {
         if (cameras && cameras.length) {
           const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
 
-          html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
-            stopScanning();
+          html5QrModul.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+            stopModuleScanning();
 
             const val = (text || "").toUpperCase().trim();
             const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
 
             if (!exists && val) {
               codes.unshift({ value: val, note: "" });
-              localStorage.setItem("codesWZ", JSON.stringify(codes));
+              saveCodes();
               updateList();
             }
 
@@ -504,30 +912,30 @@
           });
         } else {
           alert("Nie wykryto kamery.");
-          isScanning = false;
-          document.getElementById("startScanBtn").style.display = "inline-block";
-          document.getElementById("reader").style.display = "none";
+          isModuleScanning = false;
+          document.getElementById("startScanModulBtn").style.display = "inline-block";
+          document.getElementById("readerModul").style.display = "none";
         }
       }).catch(err => {
         alert("Błąd kamery: " + err);
-        isScanning = false;
-        document.getElementById("startScanBtn").style.display = "inline-block";
-        document.getElementById("reader").style.display = "none";
+        isModuleScanning = false;
+        document.getElementById("startScanModulBtn").style.display = "inline-block";
+        document.getElementById("readerModul").style.display = "none";
       });
     }
 
-    function stopScanning() {
-      if (html5Qr && isScanning) {
-        html5Qr.stop().then(() => {
-          html5Qr.clear();
-          isScanning = false;
-          document.getElementById("reader").style.display = "none";
-          document.getElementById("startScanBtn").style.display = "inline-block";
+    function stopModuleScanning() {
+      if (html5QrModul && isModuleScanning) {
+        html5QrModul.stop().then(() => {
+          html5QrModul.clear();
+          isModuleScanning = false;
+          document.getElementById("readerModul").style.display = "none";
+          document.getElementById("startScanModulBtn").style.display = "inline-block";
         }).catch(err => {
           console.error("Błąd zatrzymania skanera:", err);
-          isScanning = false;
-          document.getElementById("reader").style.display = "none";
-          document.getElementById("startScanBtn").style.display = "inline-block";
+          isModuleScanning = false;
+          document.getElementById("readerModul").style.display = "none";
+          document.getElementById("startScanModulBtn").style.display = "inline-block";
         });
       }
     }
