@@ -761,12 +761,12 @@ function updatePartsList() {
     qty.className = "part-qty";
 
     qty.oninput = () => {
-    const newQty = Number(qty.value || 0);
-    if (newQty > 0) {
-    listaCzesci[index].ilosc = newQty;
-    savePartsList();
-  }
-};
+      const newQty = Number(qty.value || 0);
+      if (newQty > 0) {
+        listaCzesci[index].ilosc = newQty;
+        savePartsList();
+      }
+    };
 
     const remove = document.createElement("span");
     remove.className = "remove-btn";
