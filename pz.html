@@ -303,35 +303,53 @@
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
     <!-- MODUŁY -->
-    <div class="section-title">MODUŁY</div>
+<!-- PRZYCISK MODUŁY -->
+<button id="showModulesBtn" onclick="showModulesSection()" style="
+  width: 100%;
+  height: 48px;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #555;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  margin: 10px 0 8px;">
+  Moduły
+</button>
 
-    <button id="startScanModulBtn" onclick="startModuleScanning()" style="
-      width: 100%;
-      height: 50px;
-      font-size: 1rem;
-      font-weight: bold;
-      background-color: #2e7d32;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      margin: 10px 0;">
-      Skanuj moduł
-    </button>
+<!-- MODUŁY -->
+<div id="modulesSection" class="hidden">
+  <div class="section-title">MODUŁY</div>
 
-    <div id="readerModul" style="display: none;"></div>
+  <button id="startScanModulBtn" onclick="startModuleScanning()" style="
+    width: 100%;
+    height: 50px;
+    font-size: 1rem;
+    font-weight: bold;
+    background-color: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    margin: 10px 0;">
+    Skanuj moduł
+  </button>
 
-    <div style="display: flex; gap: 8px; margin: 10px 0;">
-      <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
-      <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
-    </div>
+  <div id="readerModul" style="display: none;"></div>
 
-    <div class="list-header">
-      <h3 style="margin:0; font-size:0.95rem;">Liczba modułów</h3>
-      <span class="badge" id="codeCount">0</span>
-    </div>
+  <div style="display: flex; gap: 8px; margin: 10px 0;">
+    <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
+    <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
+  </div>
 
-    <ul id="codeList"></ul>
+  <div class="list-header">
+    <h3 style="margin:0; font-size:0.95rem;">Liczba modułów</h3>
+    <span class="badge" id="codeCount">0</span>
+  </div>
+
+  <ul id="codeList"></ul>
+</div>
 
     <!-- PRZYCISK CZĘŚCI -->
     <button id="showPartsBtn" onclick="showPartsSection()" style="
@@ -446,7 +464,30 @@ function showPartsSection() {
     btn.style.display = "block";
   }
 }
+function showModulesSection() {
+  const section = document.getElementById("modulesSection");
+  const btn = document.getElementById("showModulesBtn");
 
+  if (section.classList.contains("hidden")) {
+    section.classList.remove("hidden");
+
+    btn.style.height = "29px";
+    btn.style.fontSize = "0.8rem";
+    btn.style.margin = "12px 0 4px";
+    btn.style.padding = "0";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+  } else {
+    section.classList.add("hidden");
+
+    btn.style.height = "48px";
+    btn.style.fontSize = "1rem";
+    btn.style.margin = "10px 0 8px";
+    btn.style.padding = "10px";
+    btn.style.display = "block";
+  }
+}
 function saveCodes() {
   localStorage.setItem("codesPZ", JSON.stringify(codes));
 }
