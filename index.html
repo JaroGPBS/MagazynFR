@@ -114,6 +114,11 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
     .main-menu > button {
@@ -201,13 +206,12 @@
           <button onclick="showRouteForm('pz.html')">Przyjęcie moduły</button>
           <button onclick="showRouteForm('wz.html')">Wydanie moduły</button>
           <button onclick="window.location.href='czesci.html'">Serwisy części</button>
-
-          <div class="inventory-wrap">
-            <button class="inventory-btn" onclick="window.location.href='inwentaryzacja.html'">Inwentaryzacja</button>
-        </div>
       </div>
 
         <button id="logoutBtn" class="logout-btn" onclick="logout()">Wyloguj</button>
+        <div id="inventoryWrap" class="inventory-wrap">
+          <button class="inventory-btn" onclick="window.location.href='inwentaryzacja.html'">Inwentaryzacja</button>
+        </div>
 
         <!-- FORMULARZ TRASY DLA PZ/WZ -->
         <div id="route-form" class="hidden">
