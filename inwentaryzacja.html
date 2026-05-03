@@ -1,1 +1,534 @@
-test
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Inwentaryzacja – Le Magazynier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: #1c1c1c;
+      font-family: sans-serif;
+      color: #f5f5f5;
+    }
+
+    .form-wrapper {
+      max-width: 500px;
+      margin: auto;
+      background: #333;
+      padding: 20px;
+      border-radius: 12px;
+      min-height: 90vh;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .top-btn {
+      height: 34px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background: #555;
+      color: white;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scan-btn {
+      background: #2e7d32;
+    }
+
+    .title {
+      font-family: 'Informal Roman', cursive;
+      font-size: 1.7rem;
+      text-align: center;
+      line-height: 1;
+      color: #f9f9f9;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 1rem;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background-color: #222;
+      color: #f5f5f5;
+    }
+
+    input::placeholder { color: #999; }
+
+    button {
+      cursor: pointer;
+      background-color: #666;
+      border: none;
+      font-weight: bold;
+    }
+
+    button:hover { background-color: #777; }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 12px auto;
+    }
+
+    .search-results {
+      margin: 8px 0 14px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .result-item {
+      padding: 10px;
+      background: #222;
+      border-bottom: 1px solid #444;
+      cursor: pointer;
+    }
+
+    .result-item:last-child { border-bottom: none; }
+    .result-item:hover { background: #444; }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 12px;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid #666;
+    }
+
+    .part-name {
+      flex: 1;
+      font-size: 0.85rem;
+      word-break: normal;
+      overflow-wrap: break-word;
+      line-height: 1.2;
+    }
+
+    .part-qty {
+      width: 54px;
+      min-width: 54px;
+      max-width: 54px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 4px 4px;
+      border-radius: 6px;
+      background: #1c1c1c;
+      border: 1px solid #555;
+    }
+
+    .remove-btn {
+      color: red;
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0 6px;
+      font-size: 1.2rem;
+    }
+
+    .send-btn {
+      margin-top: 18px;
+      height: 48px;
+      background: #2e7d32;
+      border-radius: 12px;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 18px;
+    }
+
+    .overlay-box {
+      width: 100%;
+      max-width: 360px;
+      background: #333;
+      padding: 22px;
+      border-radius: 12px;
+      border: 1px solid #666;
+    }
+
+    .status {
+      color: #ffdddd;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
+    .footer-logo {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .footer-logo img {
+      width: 40%;
+      max-width: 200px;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="form-wrapper">
+    <div class="top-row">
+      <button id="startScanBtn" class="top-btn scan-btn" onclick="startScanning()" disabled>Skanuj QR</button>
+      <div class="title">Inwentaryzacja</div>
+      <button class="top-btn" onclick="goBack()">← Cofnij</button>
+    </div>
+
+    <div id="reader" style="display:none;"></div>
+
+    <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
+    <div id="searchResults" class="search-results"></div>
+
+    <ul id="partList"></ul>
+
+    <button id="sendBtn" class="send-btn" onclick="sendData()" disabled>Wyślij inwentaryzację</button>
+    <p id="status" class="status"></p>
+
+    <div class="footer-logo">
+      <img src="https://jarogpbs.github.io/MagazynFR/Jaro.png" alt="Created by Jaro">
+    </div>
+  </div>
+
+  <div id="loadingOverlay" class="overlay" style="display:flex;">
+    <div class="overlay-box">
+      ⏳ Aktualizuję bazę części...<br>
+      Proszę czekać.
+    </div>
+  </div>
+
+  <div id="sendingOverlay" class="overlay">
+    <div class="overlay-box">
+      ⏳ Wysyłanie inwentaryzacji...<br>
+      Proszę czekać.
+    </div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
+
+    let bazaCzesci = [];
+    let listaCzesci = [];
+    let html5Qr;
+    let isScanning = false;
+
+    function goBack() {
+      window.location.href = "index.html";
+    }
+
+    function normalizeText(text) {
+      return String(text || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function saveList() {
+      localStorage.setItem("inwentaryzacjaLista", JSON.stringify(listaCzesci));
+    }
+
+    function updateList() {
+      const list = document.getElementById("partList");
+      list.innerHTML = "";
+
+      listaCzesci.forEach((item, index) => {
+        const li = document.createElement("li");
+
+        const name = document.createElement("div");
+        name.className = "part-name";
+        name.textContent = item.nazwa || "";
+
+        const qty = document.createElement("input");
+        qty.type = "number";
+        qty.min = "1";
+        qty.value = item.ilosc || "";
+        qty.className = "part-qty";
+
+        qty.oninput = () => {
+          const newQty = Number(qty.value || 0);
+          if (newQty > 0) {
+            listaCzesci[index].ilosc = newQty;
+            saveList();
+          }
+        };
+
+        const remove = document.createElement("span");
+        remove.className = "remove-btn";
+        remove.textContent = "✕";
+        remove.title = "Usuń";
+        remove.onclick = () => {
+          listaCzesci.splice(index, 1);
+          saveList();
+          updateList();
+        };
+
+        li.appendChild(name);
+        li.appendChild(qty);
+        li.appendChild(remove);
+        list.appendChild(li);
+      });
+    }
+
+    function loadSavedList() {
+      const saved = localStorage.getItem("inwentaryzacjaLista");
+
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          listaCzesci = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          listaCzesci = [];
+        }
+      }
+
+      updateList();
+    }
+
+    function loadPartsBase() {
+      document.getElementById("loadingOverlay").style.display = "flex";
+
+      fetch(scriptURL + "?akcja=bazaCzesci")
+        .then(res => res.json())
+        .then(data => {
+          if (!data.ok) {
+            document.getElementById("loadingOverlay").style.display = "none";
+            document.getElementById("status").innerText = "❌ " + (data.error || "Nie udało się pobrać bazy części.");
+            return;
+          }
+
+          bazaCzesci = Array.isArray(data.czesci) ? data.czesci : [];
+
+          document.getElementById("searchInput").disabled = false;
+          document.getElementById("startScanBtn").disabled = false;
+          document.getElementById("sendBtn").disabled = false;
+          document.getElementById("loadingOverlay").style.display = "none";
+        })
+        .catch(err => {
+          document.getElementById("loadingOverlay").style.display = "none";
+          document.getElementById("status").innerText = "❌ Nie udało się pobrać bazy części.";
+        });
+    }
+
+    function searchParts() {
+      const input = document.getElementById("searchInput");
+      const resultsBox = document.getElementById("searchResults");
+      const query = normalizeText(input.value);
+
+      resultsBox.innerHTML = "";
+
+      if (query.length < 2) {
+        resultsBox.style.display = "none";
+        return;
+      }
+
+      const results = bazaCzesci
+        .filter(part => {
+          const nazwa = normalizeText(part.nazwa);
+          const indeks = normalizeText(part.indeks);
+          return nazwa.includes(query) || indeks.includes(query);
+        })
+        .slice(0, 20);
+
+      if (results.length === 0) {
+        resultsBox.style.display = "block";
+        const empty = document.createElement("div");
+        empty.className = "result-item";
+        empty.textContent = "Brak wyników";
+        resultsBox.appendChild(empty);
+        return;
+      }
+
+      results.forEach(part => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.textContent = part.nazwa;
+
+        div.onclick = () => {
+          resultsBox.style.display = "none";
+          input.value = "";
+          addPart(part);
+        };
+
+        resultsBox.appendChild(div);
+      });
+
+      resultsBox.style.display = "block";
+    }
+
+    function addPart(part) {
+      const exists = listaCzesci.find(item =>
+        String(item.indeks || "").trim().toUpperCase() === String(part.indeks || "").trim().toUpperCase()
+      );
+
+      if (!exists) {
+        listaCzesci.unshift({
+          indeks: part.indeks,
+          nazwa: part.nazwa,
+          ilosc: ""
+        });
+      }
+
+      saveList();
+      updateList();
+    }
+
+    function findPartByIndex(indeks) {
+      const val = String(indeks || "").trim().toUpperCase();
+      return bazaCzesci.find(part => String(part.indeks || "").trim().toUpperCase() === val);
+    }
+
+    function sendData() {
+      if (listaCzesci.length === 0) {
+        alert("Lista inwentaryzacji jest pusta.");
+        return;
+      }
+
+      for (const item of listaCzesci) {
+        const qty = Number(item.ilosc || 0);
+        if (!qty || qty <= 0) {
+          alert("Każda część musi mieć wpisaną ilość większą od 0.");
+          return;
+        }
+      }
+
+      if (!confirm("Czy na pewno wysłać inwentaryzację?")) return;
+
+      document.getElementById("sendingOverlay").style.display = "flex";
+
+      const formData = new FormData();
+      formData.append("strona", "inwentaryzacja");
+      formData.append("czesci", JSON.stringify(listaCzesci));
+
+      fetch(scriptURL, { method: "POST", body: formData })
+        .then(res => res.text())
+        .then(txt => {
+          alert("✅ Inwentaryzacja wysłana.");
+          listaCzesci = [];
+          localStorage.removeItem("inwentaryzacjaLista");
+          updateList();
+          window.location.href = "index.html";
+        })
+        .catch(err => {
+          document.getElementById("sendingOverlay").style.display = "none";
+          document.getElementById("status").innerText = "❌ Błąd: " + err;
+        });
+    }
+
+    function startScanning() {
+      if (isScanning) return;
+      isScanning = true;
+
+      document.getElementById("startScanBtn").style.display = "none";
+      const readerDiv = document.getElementById("reader");
+      readerDiv.style.display = "block";
+      readerDiv.innerHTML = "";
+
+      html5Qr = new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
+
+          html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+            stopScanning();
+
+            const scanned = String(text || "").trim().toUpperCase();
+            const part = findPartByIndex(scanned);
+
+            if (!part) {
+              alert("Nie znaleziono części dla zeskanowanego kodu.");
+              return;
+            }
+
+            addPart(part);
+
+            if ("vibrate" in navigator) navigator.vibrate(200);
+            const beep = document.getElementById("beepSound");
+            if (beep) beep.play().catch(() => {});
+          });
+        } else {
+          alert("Nie wykryto kamery.");
+          isScanning = false;
+          document.getElementById("startScanBtn").style.display = "flex";
+          document.getElementById("reader").style.display = "none";
+        }
+      }).catch(err => {
+        alert("Błąd kamery: " + err);
+        isScanning = false;
+        document.getElementById("startScanBtn").style.display = "flex";
+        document.getElementById("reader").style.display = "none";
+      });
+    }
+
+    function stopScanning() {
+      if (html5Qr && isScanning) {
+        html5Qr.stop().then(() => {
+          html5Qr.clear();
+          isScanning = false;
+          document.getElementById("reader").style.display = "none";
+          document.getElementById("startScanBtn").style.display = "flex";
+        }).catch(err => {
+          console.error("Błąd zatrzymania skanera:", err);
+          isScanning = false;
+          document.getElementById("reader").style.display = "none";
+          document.getElementById("startScanBtn").style.display = "flex";
+        });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const login = localStorage.getItem("login");
+
+      if (!login) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      loadSavedList();
+      loadPartsBase();
+
+      document.getElementById("searchInput").addEventListener("input", searchParts);
+    });
+  </script>
+
+  <script src="autoLogout.js"></script>
+</body>
+</html>
