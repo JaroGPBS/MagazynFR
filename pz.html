@@ -618,22 +618,16 @@ function formatManualSN(input) {
   input.value = val;
   lastManualSN = val;
 }
+
 function cleanSN(value) {
   let val = String(value || "").toUpperCase().trim();
 
-  // Usuwa końcówkę MZ ze spacją lub bez:
-  // 123456 MZ -> 123456
-  // 123456MZ  -> 123456
   val = val.replace(/\s*MZ\s*$/i, "");
-
-  // Usuwa spację przed końcówką literową:
-  // 789 PL -> 789PL
-  // 789 EU -> 789EU
-  // 22/CQM1410641 FR -> 22/CQM1410641FR
   val = val.replace(/\s+([A-Z]{2})$/i, "$1");
 
   return val.trim();
 }
+
 function addManual() {
   const input = document.getElementById("manualInput");
   const val = cleanSN(input.value);
@@ -654,11 +648,6 @@ function addManual() {
   input.value = "";
   lastManualSN = "";
 }
-
-  input.value = "";
-}
-
-function removeCode(index) {
   codes.splice(index, 1);
   saveCodes();
   updateList();
