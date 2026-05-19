@@ -648,6 +648,8 @@ function addManual() {
   input.value = "";
   lastManualSN = "";
 }
+
+function removeCode(index) {
   codes.splice(index, 1);
   saveCodes();
   updateList();
