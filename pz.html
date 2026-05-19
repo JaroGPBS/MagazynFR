@@ -528,8 +528,10 @@ function updateList() {
     codeText.value = item.value;
     codeText.className = "code-text";
 
-    codeText.oninput = () => {
-      codes[index].value = codeText.value.toUpperCase().trim();
+    codeText.onchange = () => {
+      const cleaned = cleanSN(codeText.value);
+      codeText.value = cleaned;
+      codes[index].value = cleaned;
       saveCodes();
     };
 
@@ -592,22 +594,42 @@ function formatManualSN(input) {
   input.value = val;
   lastManualSN = val;
 }
+function cleanSN(value) {
+  let val = String(value || "").toUpperCase().trim();
+
+  // Usuwa końcówkę MZ ze spacją lub bez:
+  // 123456 MZ -> 123456
+  // 123456MZ  -> 123456
+  val = val.replace(/\s*MZ\s*$/i, "");
+
+  // Usuwa spację przed końcówką literową:
+  // 789 PL -> 789PL
+  // 789 EU -> 789EU
+  // 22/CQM1410641 FR -> 22/CQM1410641FR
+  val = val.replace(/\s+([A-Z]{2})$/i, "$1");
+
+  return val.trim();
+}
 function addManual() {
   const input = document.getElementById("manualInput");
-  const val = input.value.trim().toUpperCase();
+  const val = cleanSN(input.value);
 
   if (!val || val.length < 3) {
     alert("Kod zbyt krótki lub pusty.");
     return;
   }
 
-  const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+  const exists = codes.find(c => cleanSN(c.value) === val);
 
   if (!exists) {
     codes.unshift({ value: val, note: "", nok: false });
     saveCodes();
     updateList();
   }
+
+  input.value = "";
+  lastManualSN = "";
+}
 
   input.value = "";
 }
@@ -927,7 +949,7 @@ function startModuleScanning() {
       html5QrModul.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
         stopModuleScanning();
 
-        const val = (text || "").toUpperCase().trim();
+        const val = cleanSN(text);
         const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
 
         if (!exists && val) {
