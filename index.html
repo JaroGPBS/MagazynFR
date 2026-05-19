@@ -260,11 +260,14 @@
     }
 
     function showMenu() {
-  selectedDestination = "";
-  document.getElementById("main-menu").classList.remove("hidden");
-  document.getElementById("route-form").classList.add("hidden");
-  document.getElementById("logoutBtn").classList.remove("hidden");
-}
+      selectedDestination = "";
+      document.getElementById("main-menu").classList.remove("hidden");
+      document.getElementById("route-form").classList.add("hidden");
+      document.getElementById("logoutBtn").classList.remove("hidden");
+
+      const inventoryWrap = document.getElementById("inventoryWrap");
+      if (inventoryWrap) inventoryWrap.classList.remove("hidden");
+    }
 
     function showRouteForm(destination) {
       selectedDestination = destination;
@@ -272,6 +275,8 @@
       document.getElementById("main-menu").classList.add("hidden");
       document.getElementById("route-form").classList.remove("hidden");
       document.getElementById("logoutBtn").classList.add("hidden");
+      const inventoryWrap = document.getElementById("inventoryWrap");
+      if (inventoryWrap) inventoryWrap.classList.add("hidden");
 
       const trasa = localStorage.getItem("trasa");
       const przewoznik = localStorage.getItem("przewoznik");
