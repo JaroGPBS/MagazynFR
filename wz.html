@@ -283,6 +283,28 @@
       margin-top: 12px;
     }
 
+
+    .base-status {
+      width: 100%;
+      min-height: 34px;
+      margin: 18px 0 8px;
+      padding: 8px 10px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      background-color: #2a2a2a;
+      color: #cccccc;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: normal;
+      user-select: none;
+    }
+
+    .base-status.error {
+      color: #ffd600;
+      font-weight: bold;
+      border-color: #aa3333;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -380,6 +402,11 @@
       <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
 
       <button onclick="sendData()">Wyślij dane</button>
+
+      <div id="partsBaseStatus" class="base-status" onclick="handleBaseStatusClick()">
+        Baza części: brak
+      </div>
+
       <p id="status"></p>
 
       <div id="sendingOverlay" class="overlay">
@@ -396,7 +423,7 @@
   </div>
 
   <!-- ŁADOWANIE BAZY CZĘŚCI -->
-  <div id="loadingOverlay" class="overlay" style="display:flex;">
+  <div id="loadingOverlay" class="overlay" style="display:none;">
     <div class="overlay-box">
       ⏳ Aktualizuję bazę części...<br>
       Proszę czekać.
@@ -516,6 +543,15 @@
       lastManualSN = val;
     }
 
+    function cleanSN(value) {
+      let val = String(value || "").toUpperCase().trim();
+
+      val = val.replace(/\s*MZ\s*$/i, "");
+      val = val.replace(/\s+([A-Z]{2})$/i, "$1");
+
+      return val.trim();
+    }
+
     function saveCodes() {
       localStorage.setItem("codesWZ", JSON.stringify(codes));
     }
@@ -551,8 +587,10 @@
         codeText.value = item.value;
         codeText.className = "code-text";
 
-        codeText.oninput = () => {
-          codes[index].value = codeText.value.toUpperCase().trim();
+        codeText.onchange = () => {
+          const cleaned = cleanSN(codeText.value);
+          codeText.value = cleaned;
+          codes[index].value = cleaned;
           saveCodes();
         };
 
@@ -577,14 +615,14 @@
 
     function addManual() {
       const input = document.getElementById("manualInput");
-      const val = input.value.trim().toUpperCase();
+      const val = cleanSN(input.value);
 
       if (!val || val.length < 3) {
         alert("Kod zbyt krótki lub pusty.");
         return;
       }
 
-      const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+      const exists = codes.find(c => cleanSN(c.value) === val);
 
       if (!exists) {
         codes.unshift({ value: val, note: "" });
@@ -604,27 +642,125 @@
         .trim();
     }
 
-    function loadPartsBase() {
-      document.getElementById("loadingOverlay").style.display = "flex";
+    const PARTS_BASE_CACHE_KEY = "partsBaseCache_v1";
+    const PARTS_BASE_TIME_KEY = "partsBaseCacheTime_v1";
+    const PARTS_BASE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+    const BASE_STATUS_DOUBLE_CLICK_MS = 600;
 
+    let lastBaseStatusClick = 0;
+
+    function formatBaseDate(timestamp) {
+      const d = new Date(timestamp);
+
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+
+      return `${hh}:${mm} ${day}.${month}`;
+    }
+
+    function setBaseStatus(text, isError) {
+      const el = document.getElementById("partsBaseStatus");
+      if (!el) return;
+
+      el.textContent = text;
+
+      if (isError) {
+        el.classList.add("error");
+      } else {
+        el.classList.remove("error");
+      }
+    }
+
+    function enablePartsBase() {
+      document.getElementById("searchInput").disabled = false;
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
+
+    function loadPartsBaseFromCache() {
+      const savedBase = localStorage.getItem(PARTS_BASE_CACHE_KEY);
+      const savedTime = Number(localStorage.getItem(PARTS_BASE_TIME_KEY) || 0);
+
+      if (!savedBase || !savedTime) {
+        setBaseStatus("Baza części: brak", false);
+        return false;
+      }
+
+      try {
+        const parsed = JSON.parse(savedBase);
+
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          setBaseStatus("Baza części: brak", false);
+          return false;
+        }
+
+        bazaCzesci = parsed;
+        enablePartsBase();
+        setBaseStatus("Baza z dnia: " + formatBaseDate(savedTime), false);
+
+        return savedTime;
+      } catch {
+        setBaseStatus("BŁĄD AKTUALIZACJI", true);
+        return false;
+      }
+    }
+
+    function refreshPartsBaseInBackground() {
       fetch(scriptURL + "?akcja=bazaCzesci")
         .then(res => res.json())
         .then(data => {
-          if (!data.ok) {
+          if (!data.ok || !Array.isArray(data.czesci) || data.czesci.length === 0) {
+            setBaseStatus("BŁĄD AKTUALIZACJI", true);
             document.getElementById("loadingOverlay").style.display = "none";
-            document.getElementById("status").innerText = "❌ " + (data.error || "Nie udało się pobrać bazy części.");
             return;
           }
 
-          bazaCzesci = Array.isArray(data.czesci) ? data.czesci : [];
+          bazaCzesci = data.czesci;
 
-          document.getElementById("searchInput").disabled = false;
-          document.getElementById("loadingOverlay").style.display = "none";
+          const now = Date.now();
+          localStorage.setItem(PARTS_BASE_CACHE_KEY, JSON.stringify(bazaCzesci));
+          localStorage.setItem(PARTS_BASE_TIME_KEY, String(now));
+
+          enablePartsBase();
+          setBaseStatus("Baza z dnia: " + formatBaseDate(now), false);
         })
         .catch(err => {
+          setBaseStatus("BŁĄD AKTUALIZACJI", true);
           document.getElementById("loadingOverlay").style.display = "none";
-          document.getElementById("status").innerText = "❌ Nie udało się pobrać bazy części.";
         });
+    }
+
+    function forceRefreshPartsBase() {
+      setBaseStatus("Aktualizuję bazę części...", false);
+      refreshPartsBaseInBackground();
+    }
+
+    function handleBaseStatusClick() {
+      const now = Date.now();
+
+      if (now - lastBaseStatusClick <= BASE_STATUS_DOUBLE_CLICK_MS) {
+        lastBaseStatusClick = 0;
+        forceRefreshPartsBase();
+        return;
+      }
+
+      lastBaseStatusClick = now;
+    }
+
+    function loadPartsBase() {
+      const savedTime = loadPartsBaseFromCache();
+
+      if (!savedTime) {
+        refreshPartsBaseInBackground();
+        return;
+      }
+
+      const age = Date.now() - savedTime;
+
+      if (age > PARTS_BASE_MAX_AGE) {
+        refreshPartsBaseInBackground();
+      }
     }
 
     function searchParts() {
@@ -801,7 +937,7 @@
       document.getElementById("sendingOverlay").style.display = "flex";
 
       const finalData = codes.map(c => {
-        const kod = (c.value || "").toString().trim().toUpperCase();
+        const kod = cleanSN(c.value);
         const typ = (c.note || "").toString().trim().toUpperCase();
         return `${kod} | ${typ}`;
       });
@@ -854,7 +990,7 @@
           codes = Array.isArray(parsed)
             ? parsed.map(it => {
                 const note = (it.note ?? it.typ ?? "").toString().toUpperCase().trim();
-                const value = (it.value ?? it.kod ?? "").toString().toUpperCase().trim();
+                const value = cleanSN(it.value ?? it.kod ?? "");
                 return { value, note };
               })
             : [];
@@ -912,7 +1048,7 @@
             stopModuleScanning();
 
             const val = (text || "").toUpperCase().trim();
-            const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+            const exists = codes.find(c => cleanSN(c.value) === val);
 
             if (!exists && val) {
               codes.unshift({ value: val, note: "" });
