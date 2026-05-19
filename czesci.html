@@ -787,5 +787,12 @@
 
     reloadAtMidnight();
   </script>
+  <script>
+  history.pushState({ page: "app" }, "", window.location.href);
+
+  window.addEventListener("popstate", function () {
+    window.location.replace("index.html");
+  });
+</script>
 </body>
 </html>
