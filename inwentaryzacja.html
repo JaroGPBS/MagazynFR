@@ -201,6 +201,26 @@
       max-width: 200px;
       height: auto;
     }
+
+    .base-status {
+      width: 100%;
+      min-height: 34px;
+      margin: 18px 0 8px;
+      padding: 8px 10px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      background-color: #2a2a2a;
+      color: #cccccc;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: normal;
+    }
+
+    .base-status.error {
+      color: #ffd600;
+      font-weight: bold;
+      border-color: #aa3333;
+    }
   </style>
 </head>
 
@@ -220,6 +240,11 @@
     <ul id="partList"></ul>
 
     <button id="sendBtn" class="send-btn" onclick="sendData()" disabled>Wyślij inwentaryzację</button>
+
+    <div id="partsBaseStatus" class="base-status" onclick="handleBaseStatusClick()">
+      Baza części: brak
+    </div>
+
     <p id="status" class="status"></p>
 
     <div class="footer-logo">
@@ -227,7 +252,7 @@
     </div>
   </div>
 
-  <div id="loadingOverlay" class="overlay" style="display:flex;">
+  <div id="loadingOverlay" class="overlay" style="display:none;">
     <div class="overlay-box">
       ⏳ Aktualizuję bazę części...<br>
       Proszę czekać.
@@ -322,29 +347,127 @@
       updateList();
     }
 
-    function loadPartsBase() {
-      document.getElementById("loadingOverlay").style.display = "flex";
+    const PARTS_BASE_CACHE_KEY = "partsBaseCache_v1";
+    const PARTS_BASE_TIME_KEY = "partsBaseCacheTime_v1";
+    const PARTS_BASE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+    const PARTS_BASE_CLICK_DELAY = 600;
 
+    let lastBaseStatusClickTime = 0;
+
+    function formatBaseDate(timestamp) {
+      const d = new Date(timestamp);
+
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+
+      return `${hh}:${mm} ${day}.${month}`;
+    }
+
+    function setBaseStatus(text, isError) {
+      const el = document.getElementById("partsBaseStatus");
+      if (!el) return;
+
+      el.textContent = text;
+
+      if (isError) {
+        el.classList.add("error");
+      } else {
+        el.classList.remove("error");
+      }
+    }
+
+    function enablePage() {
+      document.getElementById("searchInput").disabled = false;
+      document.getElementById("startScanBtn").disabled = false;
+      document.getElementById("sendBtn").disabled = false;
+      document.getElementById("loadingOverlay").style.display = "none";
+    }
+
+    function loadPartsBaseFromCache() {
+      const savedBase = localStorage.getItem(PARTS_BASE_CACHE_KEY);
+      const savedTime = Number(localStorage.getItem(PARTS_BASE_TIME_KEY) || 0);
+
+      if (!savedBase || !savedTime) {
+        setBaseStatus("Baza części: brak", false);
+        return false;
+      }
+
+      try {
+        const parsed = JSON.parse(savedBase);
+
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          setBaseStatus("Baza części: brak", false);
+          return false;
+        }
+
+        bazaCzesci = parsed;
+        enablePage();
+        setBaseStatus("Baza z dnia: " + formatBaseDate(savedTime), false);
+
+        return savedTime;
+      } catch {
+        setBaseStatus("BŁĄD AKTUALIZACJI", true);
+        return false;
+      }
+    }
+
+    function refreshPartsBaseInBackground() {
       fetch(scriptURL + "?akcja=bazaCzesci")
         .then(res => res.json())
         .then(data => {
-          if (!data.ok) {
-            document.getElementById("loadingOverlay").style.display = "none";
-            document.getElementById("status").innerText = "❌ " + (data.error || "Nie udało się pobrać bazy części.");
+          if (!data.ok || !Array.isArray(data.czesci) || data.czesci.length === 0) {
+            setBaseStatus("BŁĄD AKTUALIZACJI", true);
             return;
           }
 
-          bazaCzesci = Array.isArray(data.czesci) ? data.czesci : [];
+          bazaCzesci = data.czesci;
 
-          document.getElementById("searchInput").disabled = false;
-          document.getElementById("startScanBtn").disabled = false;
-          document.getElementById("sendBtn").disabled = false;
-          document.getElementById("loadingOverlay").style.display = "none";
+          const now = Date.now();
+          localStorage.setItem(PARTS_BASE_CACHE_KEY, JSON.stringify(bazaCzesci));
+          localStorage.setItem(PARTS_BASE_TIME_KEY, String(now));
+
+          enablePage();
+          setBaseStatus("Baza z dnia: " + formatBaseDate(now), false);
         })
         .catch(err => {
-          document.getElementById("loadingOverlay").style.display = "none";
-          document.getElementById("status").innerText = "❌ Nie udało się pobrać bazy części.";
+          setBaseStatus("BŁĄD AKTUALIZACJI", true);
         });
+    }
+
+    function forceRefreshPartsBase() {
+      setBaseStatus("Aktualizuję bazę części...", false);
+      refreshPartsBaseInBackground();
+    }
+
+    function handleBaseStatusClick() {
+      const now = Date.now();
+
+      if (now - lastBaseStatusClickTime <= PARTS_BASE_CLICK_DELAY) {
+        lastBaseStatusClickTime = 0;
+        forceRefreshPartsBase();
+        return;
+      }
+
+      lastBaseStatusClickTime = now;
+    }
+
+    function loadPartsBase() {
+      document.getElementById("loadingOverlay").style.display = "none";
+
+      const savedTime = loadPartsBaseFromCache();
+
+      if (!savedTime) {
+        refreshPartsBaseInBackground();
+        return;
+      }
+
+      const age = Date.now() - savedTime;
+
+      if (age > PARTS_BASE_MAX_AGE) {
+        refreshPartsBaseInBackground();
+      }
     }
 
     function searchParts() {
