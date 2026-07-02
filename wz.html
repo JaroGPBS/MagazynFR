@@ -448,7 +448,7 @@
 
   <script>
     function goBack() {
-      window.location.href = "index.html";
+      window.location.replace("index.html");
     }
 
     const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
@@ -972,7 +972,7 @@
           localStorage.removeItem("tablicaNacz");
 
           sessionStorage.setItem("clearInputsAfterSend", "1");
-          window.location.href = "index.html";
+          window.location.replace("index.html");
         })
         .catch(err => {
           document.getElementById("sendingOverlay").style.display = "none";
