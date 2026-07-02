@@ -455,7 +455,8 @@
 
     const allowed = [
       "FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO",
-      "HICU", "HIDUO", "HIUNO", "FMB", "LQB", "RQB", "BQ"
+      "HICU", "HIDUO", "HIUNO", "FMB", "LQB", "RQB",
+      "CUIND", "EXTIND", "CUOUT", "EXTOUT"
     ];
 
     let codes = [];
@@ -589,9 +590,17 @@
 
         codeText.onchange = () => {
           const cleaned = cleanSN(codeText.value);
+          const detectedType = detectModuleType(cleaned);
+
           codeText.value = cleaned;
           codes[index].value = cleaned;
+
+          if (detectedType) {
+            codes[index].note = detectedType;
+          }
+
           saveCodes();
+          updateList();
         };
 
         const remove = document.createElement("span");
@@ -613,6 +622,19 @@
       saveCodes();
     }
 
+
+    function detectModuleType(value) {
+      const sn = cleanSN(value);
+      const body = sn.includes("/") ? sn.split("/").pop() : sn;
+
+      if (body.startsWith("CDJ")) return "CUIND";
+      if (body.startsWith("DDJ")) return "EXTIND";
+      if (body.startsWith("CDT")) return "CUOUT";
+      if (body.startsWith("DDT")) return "EXTOUT";
+
+      return "";
+    }
+
     function addManual() {
       const input = document.getElementById("manualInput");
       const val = cleanSN(input.value);
@@ -625,7 +647,7 @@
       const exists = codes.find(c => cleanSN(c.value) === val);
 
       if (!exists) {
-        codes.unshift({ value: val, note: "" });
+        codes.unshift({ value: val, note: detectModuleType(val) });
         saveCodes();
         updateList();
       }
@@ -1051,7 +1073,7 @@
             const exists = codes.find(c => cleanSN(c.value) === val);
 
             if (!exists && val) {
-              codes.unshift({ value: val, note: "" });
+              codes.unshift({ value: val, note: detectModuleType(val) });
               saveCodes();
               updateList();
             }
@@ -1107,7 +1129,10 @@
     <option value="FMB">
     <option value="LQB">
     <option value="RQB">
-    <option value="BQ">
+    <option value="CUIND">
+    <option value="EXTIND">
+    <option value="CUOUT">
+    <option value="EXTOUT">
   </datalist>
 
   <script src="autoLogout.js"></script>
