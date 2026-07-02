@@ -358,7 +358,7 @@
     let isScanning = false;
 
     function goBack() {
-      window.location.href = "index.html";
+      window.location.replace("index.html");
     }
 
     function normalizeText(text) {
@@ -691,7 +691,7 @@
           listaCzesci = [];
           localStorage.removeItem("serwisyCzesciLista");
           updateList();
-          window.location.href = "index.html";
+          window.location.replace("index.html");
         })
         .catch(err => {
           document.getElementById("sendingOverlay").style.display = "none";
