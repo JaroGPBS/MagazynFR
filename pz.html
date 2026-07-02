@@ -457,7 +457,7 @@ function goBack() {
   window.location.replace("index.html");
 }
 
-const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","BQ"];
+const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","CUIND","EXTIND","CUOUT","EXTOUT"];
 const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
 
 let codes = [];
@@ -554,9 +554,17 @@ function updateList() {
 
     codeText.onchange = () => {
       const cleaned = cleanSN(codeText.value);
+      const detectedType = detectModuleType(cleaned);
+
       codeText.value = cleaned;
       codes[index].value = cleaned;
+
+      if (detectedType) {
+        codes[index].note = detectedType;
+      }
+
       saveCodes();
+      updateList();
     };
 
     const nokCheckbox = document.createElement("input");
@@ -628,6 +636,19 @@ function cleanSN(value) {
   return val.trim();
 }
 
+
+function detectModuleType(value) {
+  const sn = cleanSN(value);
+  const body = sn.includes("/") ? sn.split("/").pop() : sn;
+
+  if (body.startsWith("CDJ")) return "CUIND";
+  if (body.startsWith("DDJ")) return "EXTIND";
+  if (body.startsWith("CDT")) return "CUOUT";
+  if (body.startsWith("DDT")) return "EXTOUT";
+
+  return "";
+}
+
 function addManual() {
   const input = document.getElementById("manualInput");
   const val = cleanSN(input.value);
@@ -640,7 +661,7 @@ function addManual() {
   const exists = codes.find(c => cleanSN(c.value) === val);
 
   if (!exists) {
-    codes.unshift({ value: val, note: "", nok: false });
+    codes.unshift({ value: val, note: detectModuleType(val), nok: false });
     saveCodes();
     updateList();
   }
@@ -1044,7 +1065,7 @@ function startModuleScanning() {
         const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
 
         if (!exists && val) {
-          codes.unshift({ value: val, note: "", nok: false });
+          codes.unshift({ value: val, note: detectModuleType(val), nok: false });
           saveCodes();
           updateList();
         }
@@ -1094,7 +1115,10 @@ function stopModuleScanning() {
   <option value="FMB">
   <option value="LQB">
   <option value="RQB">
-  <option value="BQ">
+  <option value="CUIND">
+  <option value="EXTIND">
+  <option value="CUOUT">
+  <option value="EXTOUT">
 </datalist>
 
 <script src="autoLogout.js"></script>
