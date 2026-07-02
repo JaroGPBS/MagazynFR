@@ -68,12 +68,13 @@
     }
 
     .hidden {
-    display: none !important;
+      display: none !important;
     }
+
     #form-section {
-    display: flex;
-    flex-direction: column;
-    min-height: 58vh;
+      display: flex;
+      flex-direction: column;
+      min-height: 58vh;
     }
 
     button {
@@ -97,29 +98,30 @@
       gap: 14px;
       margin-top: 20px;
     }
+
     .inventory-wrap {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
 
-.inventory-btn {
-  width: 42%;
-  height: 34px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  background-color: #8a4b24;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+    .inventory-btn {
+      width: 42%;
+      height: 34px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      background-color: #8a4b24;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
 
     .main-menu > button {
       width: 100%;
@@ -152,15 +154,15 @@
       background-color: #555;
     }
 
-.logout-btn {
-  background-color: #aa3333;
-  width: 75%;
-  height: 42px;
-  font-size: 0.95rem;
-  font-weight: bold;
-  margin: auto auto 0 auto;
-  display: block;
-}
+    .logout-btn {
+      background-color: #aa3333;
+      width: 75%;
+      height: 42px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      margin: auto auto 0 auto;
+      display: block;
+    }
 
     .logout-btn:hover {
       background-color: #cc4444;
@@ -206,11 +208,12 @@
           <button onclick="showRouteForm('pz.html')">Przyjęcie moduły</button>
           <button onclick="showRouteForm('wz.html')">Wydanie moduły</button>
           <button onclick="openCzesciWithTeam()">Serwisy części</button>
-      </div>
+        </div>
 
         <button id="logoutBtn" class="logout-btn" onclick="logout()">Wyloguj</button>
+
         <div id="inventoryWrap" class="inventory-wrap">
-          <button class="inventory-btn" onclick="window.location.href='inwentaryzacja.html'">Inwentaryzacja</button>
+          <button class="inventory-btn" onclick="window.location.replace('inwentaryzacja.html')">Inwentaryzacja</button>
         </div>
         
         <!-- FORMULARZ TRASY DLA PZ/WZ -->
@@ -275,6 +278,7 @@
       document.getElementById("main-menu").classList.add("hidden");
       document.getElementById("route-form").classList.remove("hidden");
       document.getElementById("logoutBtn").classList.add("hidden");
+
       const inventoryWrap = document.getElementById("inventoryWrap");
       if (inventoryWrap) inventoryWrap.classList.add("hidden");
 
@@ -287,6 +291,24 @@
       if (przewoznik) document.getElementById("przewoznik").value = przewoznik;
       if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
       if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
+    }
+
+    function openCzesciWithTeam() {
+      const ekipa = prompt("Podaj nazwę ekipy / trasy:");
+
+      if (ekipa === null) {
+        return;
+      }
+
+      const cleanEkipa = ekipa.trim().toUpperCase();
+
+      if (!cleanEkipa) {
+        alert("Musisz wpisać nazwę ekipy / trasy.");
+        return;
+      }
+
+      localStorage.setItem("serwisEkipa", cleanEkipa);
+      window.location.replace("czesci.html");
     }
 
     function backToMenu() {
@@ -319,7 +341,7 @@
 
       const url = `${selectedDestination}?trasa=${encodeURIComponent(trasa)}&przewoznik=${encodeURIComponent(przewoznik)}&tablica=${encodeURIComponent(tablicaCombined)}`;
 
-      window.location.href = url;
+      window.location.replace(url);
     }
 
     function logout() {
@@ -329,6 +351,7 @@
       localStorage.removeItem("tablica");
       localStorage.removeItem("tablicaSam");
       localStorage.removeItem("tablicaNacz");
+      localStorage.removeItem("serwisEkipa");
 
       document.getElementById("form-section").classList.add("hidden");
       document.getElementById("login-section").classList.remove("hidden");
