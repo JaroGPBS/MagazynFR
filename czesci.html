@@ -83,16 +83,19 @@
       cursor: not-allowed;
     }
 
-    .team-input {
+    .search-input-light {
       background-color: #f2eadf !important;
       color: #1c1c1c !important;
       border: 2px solid #b88a5a !important;
       font-weight: bold;
-      text-transform: uppercase;
     }
 
-    .team-input::placeholder {
+    .search-input-light::placeholder {
       color: #6b5b4a !important;
+    }
+
+    .search-input-light:disabled {
+      opacity: 0.75;
     }
 
     .team-info {
@@ -294,9 +297,7 @@
         <button class="back-button" onclick="goBack()">← Cofnij</button>
       </div>
 
-      <input type="text" id="ekipaTrasa" class="team-input" placeholder="EKIPA / TRASA" autocomplete="off">
-
-      <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
+      <input type="text" id="searchInput" class="search-input-light" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
       <div id="searchResults" class="search-results"></div>
 
       <button id="startScanBtn" onclick="startScanning()" style="
@@ -393,41 +394,15 @@
     }
 
     function loadTeamInfo() {
-      const ekipa = localStorage.getItem("serwisEkipa");
-      const input = document.getElementById("ekipaTrasa");
+      const ekipa = String(localStorage.getItem("serwisEkipa") || "").trim().toUpperCase();
       const box = document.getElementById("teamInfo");
-
-      if (input && ekipa && ekipa.trim()) {
-        input.value = ekipa.trim().toUpperCase();
-      }
 
       if (!box) return;
 
-      const currentValue = input ? input.value.trim().toUpperCase() : "";
-
-      if (currentValue) {
-        box.textContent = "Ekipa - " + currentValue;
+      if (ekipa) {
+        box.textContent = "Ekipa - " + ekipa;
         box.style.display = "block";
       } else {
-        box.textContent = "";
-        box.style.display = "none";
-      }
-    }
-
-    function updateTeamInfoFromInput() {
-      const input = document.getElementById("ekipaTrasa");
-      const box = document.getElementById("teamInfo");
-
-      if (!input || !box) return;
-
-      const value = input.value.trim().toUpperCase();
-
-      if (value) {
-        localStorage.setItem("serwisEkipa", value);
-        box.textContent = "Ekipa - " + value;
-        box.style.display = "block";
-      } else {
-        localStorage.removeItem("serwisEkipa");
         box.textContent = "";
         box.style.display = "none";
       }
@@ -727,10 +702,10 @@
     }
 
     function sendData() {
-      const ekipaTrasa = document.getElementById("ekipaTrasa").value.trim().toUpperCase();
+      const ekipaTrasa = String(localStorage.getItem("serwisEkipa") || "").trim().toUpperCase();
 
       if (!ekipaTrasa) {
-        alert("Uzupełnij pole EKIPA / TRASA.");
+        alert("Brak nazwy ekipy. Wróć na stronę główną i wejdź ponownie przez Serwisy części.");
         return;
       }
 
@@ -830,14 +805,6 @@
       loadTeamInfo();
       loadSavedList();
       loadPartsBase();
-
-      const ekipaInput = document.getElementById("ekipaTrasa");
-      if (ekipaInput) {
-        ekipaInput.addEventListener("input", () => {
-          ekipaInput.value = ekipaInput.value.toUpperCase();
-          updateTeamInfoFromInput();
-        });
-      }
 
       document.getElementById("searchInput").addEventListener("input", searchParts);
     });
