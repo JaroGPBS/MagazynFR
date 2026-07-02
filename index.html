@@ -179,6 +179,79 @@
       height: auto;
       margin-top: 20px;
     }
+
+    .team-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .team-modal-box {
+      width: 100%;
+      max-width: 380px;
+      background: #333;
+      border: 1px solid #666;
+      border-radius: 14px;
+      padding: 20px;
+      color: white;
+      box-shadow: 0 0 18px rgba(0,0,0,0.45);
+    }
+
+    .team-modal-title {
+      font-size: 1.15rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .team-modal-subtitle {
+      font-size: 0.85rem;
+      color: #ddd;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .team-modal-input {
+      background-color: #f2eadf !important;
+      color: #1c1c1c !important;
+      border: 2px solid #b88a5a !important;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .team-modal-input::placeholder {
+      color: #6b5b4a !important;
+    }
+
+    .team-modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .team-modal-buttons button {
+      flex: 1;
+      height: 46px;
+      font-weight: bold;
+    }
+
+    .team-cancel-btn {
+      background-color: #555;
+    }
+
+    .team-ok-btn {
+      background-color: #2e7d32;
+    }
+
+    .team-ok-btn:hover {
+      background-color: #3fa344;
+    }
   </style>
 </head>
 
@@ -207,13 +280,13 @@
         <div id="main-menu" class="main-menu">
           <button onclick="showRouteForm('pz.html')">Przyjęcie moduły</button>
           <button onclick="showRouteForm('wz.html')">Wydanie moduły</button>
-          <button onclick="openCzesciWithTeam()">Serwisy części</button>
+          <button onclick="openCzesciTeamModal()">Serwisy części</button>
         </div>
 
         <button id="logoutBtn" class="logout-btn" onclick="logout()">Wyloguj</button>
 
         <div id="inventoryWrap" class="inventory-wrap">
-          <button class="inventory-btn" onclick="window.location.replace('inwentaryzacja.html')">Inwentaryzacja</button>
+          <button class="inventory-btn" onclick="window.location.replace('inwentaryzacja.html?v=' + Date.now())">Inwentaryzacja</button>
         </div>
         
         <!-- FORMULARZ TRASY DLA PZ/WZ -->
@@ -233,6 +306,27 @@
 
     <div class="footer-logo">
       <img src="https://jarogpbs.github.io/MagazynFR/Jaro.png" alt="Created by Jaro">
+    </div>
+  </div>
+
+  <!-- OKNO EKIPY DLA SERWISÓW CZĘŚCI -->
+  <div id="teamModal" class="team-modal">
+    <div class="team-modal-box">
+      <div class="team-modal-title">Serwisy części</div>
+      <div class="team-modal-subtitle">Wpisz nazwę ekipy / trasy</div>
+
+      <input
+        type="text"
+        id="teamModalInput"
+        class="team-modal-input"
+        placeholder="EKIPA / TRASA"
+        autocomplete="off"
+      >
+
+      <div class="team-modal-buttons">
+        <button class="team-cancel-btn" onclick="closeCzesciTeamModal()">Anuluj</button>
+        <button class="team-ok-btn" onclick="confirmCzesciTeam()">OK</button>
+      </div>
     </div>
   </div>
 
@@ -293,14 +387,30 @@
       if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
     }
 
-    function openCzesciWithTeam() {
-      const ekipa = prompt("Podaj nazwę ekipy / trasy:");
+    function openCzesciTeamModal() {
+      const modal = document.getElementById("teamModal");
+      const input = document.getElementById("teamModalInput");
+      const saved = localStorage.getItem("serwisEkipa") || "";
 
-      if (ekipa === null) {
-        return;
-      }
+      input.value = saved;
+      modal.style.display = "flex";
 
-      const cleanEkipa = ekipa.trim().toUpperCase();
+      setTimeout(() => {
+        input.focus();
+      }, 100);
+    }
+
+    function closeCzesciTeamModal() {
+      const modal = document.getElementById("teamModal");
+      const input = document.getElementById("teamModalInput");
+
+      input.value = "";
+      modal.style.display = "none";
+    }
+
+    function confirmCzesciTeam() {
+      const input = document.getElementById("teamModalInput");
+      const cleanEkipa = input.value.trim().toUpperCase();
 
       if (!cleanEkipa) {
         alert("Musisz wpisać nazwę ekipy / trasy.");
@@ -308,7 +418,7 @@
       }
 
       localStorage.setItem("serwisEkipa", cleanEkipa);
-      window.location.replace("czesci.html");
+      window.location.replace("czesci.html?v=" + Date.now());
     }
 
     function backToMenu() {
@@ -339,7 +449,7 @@
       localStorage.setItem("tablicaSam", tablicaSam);
       localStorage.setItem("tablicaNacz", tablicaNacz);
 
-      const url = `${selectedDestination}?trasa=${encodeURIComponent(trasa)}&przewoznik=${encodeURIComponent(przewoznik)}&tablica=${encodeURIComponent(tablicaCombined)}`;
+      const url = `${selectedDestination}?trasa=${encodeURIComponent(trasa)}&przewoznik=${encodeURIComponent(przewoznik)}&tablica=${encodeURIComponent(tablicaCombined)}&v=${Date.now()}`;
 
       window.location.replace(url);
     }
@@ -357,6 +467,7 @@
       document.getElementById("login-section").classList.remove("hidden");
       document.getElementById("kod").value = "";
 
+      closeCzesciTeamModal();
       showMenu();
     }
 
@@ -388,6 +499,23 @@
         document.getElementById("form-section").classList.remove("hidden");
         document.getElementById("login-section").classList.add("hidden");
         showMenu();
+      }
+
+      const teamInput = document.getElementById("teamModalInput");
+      if (teamInput) {
+        teamInput.addEventListener("input", () => {
+          teamInput.value = teamInput.value.toUpperCase();
+        });
+
+        teamInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            confirmCzesciTeam();
+          }
+
+          if (e.key === "Escape") {
+            closeCzesciTeamModal();
+          }
+        });
       }
     });
 
