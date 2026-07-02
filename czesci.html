@@ -83,6 +83,28 @@
       cursor: not-allowed;
     }
 
+    .team-input {
+      background-color: #f2eadf !important;
+      color: #1c1c1c !important;
+      border: 2px solid #b88a5a !important;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .team-input::placeholder {
+      color: #6b5b4a !important;
+    }
+
+    .team-info {
+      display: none;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      font-size: 0.78rem;
+      color: #d6d6d6;
+      font-weight: bold;
+      letter-spacing: 0.3px;
+    }
+
     #reader {
       width: 100%;
       max-width: 400px;
@@ -153,7 +175,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 0;
     }
 
     .badge {
@@ -235,7 +257,6 @@
       margin-top: 12px;
     }
 
-
     .base-status {
       width: 100%;
       min-height: 34px;
@@ -273,7 +294,7 @@
         <button class="back-button" onclick="goBack()">← Cofnij</button>
       </div>
 
-      <input type="text" id="ekipaTrasa" placeholder="EKIPA / TRASA" autocomplete="off">
+      <input type="text" id="ekipaTrasa" class="team-input" placeholder="EKIPA / TRASA" autocomplete="off">
 
       <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
       <div id="searchResults" class="search-results"></div>
@@ -293,6 +314,8 @@
       </button>
 
       <div id="reader" style="display: none;"></div>
+
+      <div id="teamInfo" class="team-info"></div>
 
       <div class="list-header">
         <h3 style="margin:0;">Lista części</h3>
@@ -367,6 +390,47 @@
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .trim();
+    }
+
+    function loadTeamInfo() {
+      const ekipa = localStorage.getItem("serwisEkipa");
+      const input = document.getElementById("ekipaTrasa");
+      const box = document.getElementById("teamInfo");
+
+      if (input && ekipa && ekipa.trim()) {
+        input.value = ekipa.trim().toUpperCase();
+      }
+
+      if (!box) return;
+
+      const currentValue = input ? input.value.trim().toUpperCase() : "";
+
+      if (currentValue) {
+        box.textContent = "Ekipa - " + currentValue;
+        box.style.display = "block";
+      } else {
+        box.textContent = "";
+        box.style.display = "none";
+      }
+    }
+
+    function updateTeamInfoFromInput() {
+      const input = document.getElementById("ekipaTrasa");
+      const box = document.getElementById("teamInfo");
+
+      if (!input || !box) return;
+
+      const value = input.value.trim().toUpperCase();
+
+      if (value) {
+        localStorage.setItem("serwisEkipa", value);
+        box.textContent = "Ekipa - " + value;
+        box.style.display = "block";
+      } else {
+        localStorage.removeItem("serwisEkipa");
+        box.textContent = "";
+        box.style.display = "none";
+      }
     }
 
     function saveLista() {
@@ -763,8 +827,17 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      loadTeamInfo();
       loadSavedList();
       loadPartsBase();
+
+      const ekipaInput = document.getElementById("ekipaTrasa");
+      if (ekipaInput) {
+        ekipaInput.addEventListener("input", () => {
+          ekipaInput.value = ekipaInput.value.toUpperCase();
+          updateTeamInfoFromInput();
+        });
+      }
 
       document.getElementById("searchInput").addEventListener("input", searchParts);
     });
@@ -787,12 +860,13 @@
 
     reloadAtMidnight();
   </script>
-  <script>
-  history.pushState({ page: "app" }, "", window.location.href);
 
-  window.addEventListener("popstate", function () {
-    window.location.replace("index.html");
-  });
-</script>
+  <script>
+    history.pushState({ page: "app" }, "", window.location.href);
+
+    window.addEventListener("popstate", function () {
+      window.location.replace("index.html");
+    });
+  </script>
 </body>
 </html>
