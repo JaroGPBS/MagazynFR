@@ -624,18 +624,54 @@
 
 
     function detectModuleType(value) {
-      const sn = cleanSN(value);
-      const body = sn.includes("/") ? sn.split("/").pop() : sn;
+  const sn = cleanSN(value);
+  const body = sn.includes("/") ? sn.split("/").pop() : sn;
 
-      if (body.startsWith("CDJ")) return "CUIND";
-      if (body.startsWith("DDJ")) return "EXTIND";
-      if (body.startsWith("CDT")) return "CUOUT";
-      if (body.startsWith("DDT")) return "EXTOUT";
+  // Prefiksy konfliktowe zostają bez automatycznego typu:
+  // CDD, CDI, LD, RD
+  // Kolejność jest ważna: najpierw dłuższe prefiksy, potem krótsze.
+  const rules = [
+    ["LQBN", "LQB"],
+    ["RQBN", "RQB"],
+    ["LSUX", "XS"],
+    ["CDHI", "HICU"],
+    ["CQBM", "FMB"],
 
-      return "";
-    }
+    ["CQM", "FM"],
+    ["CQU", "FM"],
 
-    function addManual() {
+    ["LQU", "LQ"],
+    ["RQU", "RQ"],
+
+    ["LSX", "XS"],
+    ["CDH", "HICU"],
+
+    ["LDI", "DUO"],
+    ["RDI", "DUO"],
+    ["RDH", "HIDUO"],
+
+    ["RSH", "HIUNO"],
+    ["LDU", "ODL"],
+    ["RDU", "ODR"],
+
+    ["CDJ", "CUIND"],
+    ["DDJ", "EXTIND"],
+    ["CDT", "CUOUT"],
+    ["DDT", "EXTOUT"],
+
+    ["LQ", "LQ"],
+    ["RQ", "RQ"],
+    ["LS", "XS"]
+  ];
+
+  for (const [prefix, type] of rules) {
+    if (body.startsWith(prefix)) return type;
+  }
+
+  return "";
+}
+
+function addManual() {
       const input = document.getElementById("manualInput");
       const val = cleanSN(input.value);
 
