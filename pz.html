@@ -346,19 +346,39 @@
 <div id="modulesSection" class="hidden">
   <div class="section-title">MODUŁY</div>
 
-  <button id="startScanModulBtn" onclick="startModuleScanning()" style="
-    width: 100%;
-    height: 50px;
-    font-size: 1rem;
-    font-weight: bold;
-    background-color: #2e7d32;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    margin: 10px 0;">
-    Skanuj moduł
-  </button>
+  <div id="scanButtonsRow" style="
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+  ">
+    <button id="startOcrBtn" onclick="startOcrScanning()" style="
+      flex: 1;
+      height: 50px;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #8a5a2b;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 0;">
+      OCR
+    </button>
+
+    <button id="startQrBtn" onclick="startQrScanning()" style="
+      flex: 1;
+      height: 50px;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 0;">
+      QR
+    </button>
+  </div>
 
   <div id="readerModul" style="display: none;"></div>
 
@@ -1079,11 +1099,11 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPartsBase();
 });
 
-function startModuleScanning() {
+function startQrScanning() {
   if (isModuleScanning) return;
   isModuleScanning = true;
 
-  document.getElementById("startScanModulBtn").style.display = "none";
+  document.getElementById("scanButtonsRow").style.display = "none";
   const readerDiv = document.getElementById("readerModul");
   readerDiv.style.display = "block";
   readerDiv.innerHTML = "";
@@ -1114,11 +1134,19 @@ function startModuleScanning() {
     } else {
       alert("Nie wykryto kamery.");
       isModuleScanning = false;
+      document.getElementById("scanButtonsRow").style.display = "flex";
+      document.getElementById("readerModul").style.display = "none";
     }
   }).catch(err => {
     alert("Błąd kamery: " + err);
     isModuleScanning = false;
+    document.getElementById("scanButtonsRow").style.display = "flex";
+    document.getElementById("readerModul").style.display = "none";
   });
+}
+
+function startOcrScanning() {
+  alert("OCR dodamy w następnym kroku.");
 }
 
 function stopModuleScanning() {
@@ -1127,10 +1155,12 @@ function stopModuleScanning() {
       html5QrModul.clear();
       isModuleScanning = false;
       document.getElementById("readerModul").style.display = "none";
-      document.getElementById("startScanModulBtn").style.display = "inline-block";
+      document.getElementById("scanButtonsRow").style.display = "flex";
     }).catch(err => {
       console.error("Błąd zatrzymania skanera:", err);
       isModuleScanning = false;
+      document.getElementById("readerModul").style.display = "none";
+      document.getElementById("scanButtonsRow").style.display = "flex";
     });
   }
 }
