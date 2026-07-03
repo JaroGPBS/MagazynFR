@@ -5,6 +5,7 @@
   <title>Przyjęcie – Le Magazynier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
   <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
 
@@ -381,6 +382,7 @@
   </div>
 
   <div id="readerModul" style="display: none;"></div>
+  <input type="file" id="ocrImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleOcrImage(this)">
 
   <div style="display: flex; gap: 8px; margin: 10px 0;">
     <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" oninput="formatManualSN(this)" style="flex: 1; padding: 4px; font-size: 1rem;">
@@ -453,6 +455,13 @@
   <div class="overlay-box">
     ⏳ Aktualizuję bazę części...<br>
     Proszę czekać.
+  </div>
+</div>
+
+<!-- OCR MODUŁU -->
+<div id="ocrOverlay" class="overlay" style="display:none;">
+  <div class="overlay-box">
+    <div id="ocrStatus">⏳ Odczytuję numer S/N...<br>Proszę czekać.</div>
   </div>
 </div>
 
@@ -1117,14 +1126,7 @@ function startQrScanning() {
       html5QrModul.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
         stopModuleScanning();
 
-        const val = cleanSN(text);
-        const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
-
-        if (!exists && val) {
-          codes.unshift({ value: val, note: detectModuleType(val), nok: false });
-          saveCodes();
-          updateList();
-        }
+        addModuleCode(text);
 
         if ("vibrate" in navigator) navigator.vibrate(200);
 
@@ -1145,8 +1147,132 @@ function startQrScanning() {
   });
 }
 
+function addModuleCode(rawValue) {
+  const val = cleanSN(rawValue);
+
+  if (!val || val.length < 3) {
+    alert("Nie udało się odczytać poprawnego numeru S/N.");
+    return false;
+  }
+
+  const exists = codes.find(c => cleanSN(c.value) === val);
+
+  if (!exists) {
+    codes.unshift({ value: val, note: detectModuleType(val), nok: false });
+    saveCodes();
+    updateList();
+  }
+
+  return true;
+}
+
 function startOcrScanning() {
-  alert("OCR dodamy w następnym kroku.");
+  if (isModuleScanning) return;
+
+  const input = document.getElementById("ocrImageInput");
+  if (!input) {
+    alert("Brak pola OCR w pliku.");
+    return;
+  }
+
+  input.value = "";
+  input.click();
+}
+
+async function handleOcrImage(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  const overlay = document.getElementById("ocrOverlay");
+  const status = document.getElementById("ocrStatus");
+
+  if (overlay) overlay.style.display = "flex";
+  if (status) status.innerHTML = "⏳ Odczytuję numer S/N...<br>Proszę czekać.";
+
+  try {
+    if (typeof Tesseract === "undefined") {
+      throw new Error("Biblioteka OCR nie została załadowana.");
+    }
+
+    const result = await Tesseract.recognize(file, "eng", {
+      logger: info => {
+        if (!status || !info || info.status !== "recognizing text") return;
+        const pct = Math.round((info.progress || 0) * 100);
+        status.innerHTML = "⏳ OCR rozpoznaje tekst...<br>Postęp: " + pct + "%";
+      }
+    });
+
+    const text = result && result.data ? result.data.text : "";
+    const serial = extractSerialFromOcrText(text);
+
+    if (!serial) {
+      alert("Nie znalazłem numeru S/N na zdjęciu. Spróbuj zrobić zdjęcie bliżej i prosto na etykietę.");
+      return;
+    }
+
+    const added = addModuleCode(serial);
+
+    if (added) {
+      if ("vibrate" in navigator) navigator.vibrate(200);
+
+      const beep = document.getElementById("beepSound");
+      if (beep) beep.play().catch(() => {});
+    }
+  } catch (err) {
+    alert("Błąd OCR: " + err.message);
+  } finally {
+    if (overlay) overlay.style.display = "none";
+    input.value = "";
+  }
+}
+
+function extractSerialFromOcrText(text) {
+  const raw = String(text || "")
+    .toUpperCase()
+    .replace(/[\\|]/g, "/")
+    .replace(/[–—]/g, "-");
+
+  const prefixes = [
+    "LQBN", "RQBN", "LSUX", "CDHI", "CQBM",
+    "CQM", "CQU", "LQU", "RQU", "LSX", "CDH",
+    "LDI", "RDI", "RDH", "RSH", "LDU", "RDU",
+    "CDJ", "DDJ", "CDT", "DDT", "CDD", "CDI",
+    "LQ", "RQ", "LS", "LD", "RD"
+  ];
+
+  const prefixGroup = prefixes.join("|");
+  const lines = raw.split(/\n+/).map(line => line.replace(/\s+/g, "").replace(/\/+/g, "/"));
+
+  const candidates = [];
+
+  for (const line of lines) {
+    if (!line) continue;
+
+    const rePrefix = new RegExp("(?:\\d{2}/)?(?:" + prefixGroup + ")[A-Z0-9]{4,16}", "g");
+    const prefMatches = line.match(rePrefix) || [];
+    candidates.push(...prefMatches);
+
+    const reNumeric = /\d{2}\/\d{6,8}[A-Z]{0,2}/g;
+    const numMatches = line.match(reNumeric) || [];
+    candidates.push(...numMatches);
+  }
+
+  // Awaryjnie sprawdź też tekst po usunięciu spacji, ale ogranicz długości dopasowania.
+  const compact = raw.replace(/\s+/g, "").replace(/\/+/g, "/");
+  const rePrefixCompact = new RegExp("(?:\\d{2}/)?(?:" + prefixGroup + ")[A-Z0-9]{4,16}", "g");
+  candidates.push(...(compact.match(rePrefixCompact) || []));
+
+  const cleaned = candidates
+    .map(c => cleanSN(c))
+    .map(c => c.replace(/[^A-Z0-9/]/g, ""))
+    .filter(c => c.length >= 6)
+    .filter(c => /[A-Z]/.test(c) || /\d{2}\/\d{6,8}/.test(c));
+
+  if (cleaned.length === 0) return "";
+
+  // Preferuj numery z rokiem i ukośnikiem, np. 25/CDJ1234568.
+  const withYear = cleaned.find(c => /^\d{2}\//.test(c));
+  return withYear || cleaned[0];
 }
 
 function stopModuleScanning() {
