@@ -1187,26 +1187,82 @@ async function handleOcrImage(input) {
   const status = document.getElementById("ocrStatus");
 
   if (overlay) overlay.style.display = "flex";
-  if (status) status.innerHTML = "⏳ Odczytuję numer S/N...<br>Proszę czekać.";
+  if (status) status.innerHTML = "⏳ Przygotowuję zdjęcie S/N...<br>Proszę czekać.";
 
   try {
     if (typeof Tesseract === "undefined") {
       throw new Error("Biblioteka OCR nie została załadowana.");
     }
 
-    const result = await Tesseract.recognize(file, "eng", {
+    const image = await loadImageFromFile(file);
+
+    // 1) Najpierw czytamy tylko pas z numerem S/N, a nie całe zdjęcie.
+    const snCanvas = prepareOcrCanvas(image, "sn");
+
+    if (status) status.innerHTML = "⏳ OCR czyta tylko pole S/N...<br>Proszę czekać.";
+
+    const snResult = await Tesseract.recognize(snCanvas, "eng", {
+      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/.-: ",
       logger: info => {
         if (!status || !info || info.status !== "recognizing text") return;
         const pct = Math.round((info.progress || 0) * 100);
-        status.innerHTML = "⏳ OCR rozpoznaje tekst...<br>Postęp: " + pct + "%";
+        status.innerHTML = "⏳ OCR czyta pole S/N...<br>Postęp: " + pct + "%";
       }
     });
 
-    const text = result && result.data ? result.data.text : "";
-    const serial = extractSerialFromOcrText(text);
+    const snText = snResult && snResult.data ? snResult.data.text : "";
+    let serial = extractSerialFromOcrText(snText);
+
+    // 2) Jeżeli numer został odczytany bez roku XX/, próbujemy odczytać rok z etykiety.
+    if (serial && !/^\d{2}\//.test(serial)) {
+      if (status) status.innerHTML = "⏳ Numer bez roku — szukam roku produkcji...";
+
+      const yearCanvas = prepareOcrCanvas(image, "year");
+      const yearResult = await Tesseract.recognize(yearCanvas, "eng", {
+        tessedit_char_whitelist: "0123456789 ",
+        logger: info => {
+          if (!status || !info || info.status !== "recognizing text") return;
+          const pct = Math.round((info.progress || 0) * 100);
+          status.innerHTML = "⏳ OCR czyta rok produkcji...<br>Postęp: " + pct + "%";
+        }
+      });
+
+      const yearText = yearResult && yearResult.data ? yearResult.data.text : "";
+      const yearPrefix = extractYearPrefixFromOcrText(yearText);
+
+      if (yearPrefix) {
+        serial = yearPrefix + "/" + serial.replace(/^\/+/, "");
+      }
+    }
+
+    // 3) Awaryjnie, jeśli mały wycinek nic nie znalazł, czytamy trochę większy środek etykiety.
+    // Nadal jest to dużo szybciej niż OCR całego zdjęcia.
+    if (!serial) {
+      if (status) status.innerHTML = "⏳ Nie znalazłem S/N — sprawdzam większy fragment etykiety...";
+
+      const labelCanvas = prepareOcrCanvas(image, "label");
+      const labelResult = await Tesseract.recognize(labelCanvas, "eng", {
+        tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/.-: ",
+        logger: info => {
+          if (!status || !info || info.status !== "recognizing text") return;
+          const pct = Math.round((info.progress || 0) * 100);
+          status.innerHTML = "⏳ OCR sprawdza etykietę...<br>Postęp: " + pct + "%";
+        }
+      });
+
+      const labelText = labelResult && labelResult.data ? labelResult.data.text : "";
+      serial = extractSerialFromOcrText(labelText);
+
+      if (serial && !/^\d{2}\//.test(serial)) {
+        const yearPrefix = extractYearPrefixFromOcrText(labelText);
+        if (yearPrefix) {
+          serial = yearPrefix + "/" + serial.replace(/^\/+/, "");
+        }
+      }
+    }
 
     if (!serial) {
-      alert("Nie znalazłem numeru S/N na zdjęciu. Spróbuj zrobić zdjęcie bliżej i prosto na etykietę.");
+      alert("Nie znalazłem numeru S/N. Zrób zdjęcie bliżej tak, żeby ramka S/N była na środku i była ostra.");
       return;
     }
 
@@ -1226,11 +1282,97 @@ async function handleOcrImage(input) {
   }
 }
 
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Nie udało się wczytać zdjęcia."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function prepareOcrCanvas(image, mode) {
+  const srcW = image.naturalWidth || image.width;
+  const srcH = image.naturalHeight || image.height;
+
+  // Kadry ustawione pod zdjęcie etykiety. Najważniejsze: pole S/N ma być mniej więcej na środku zdjęcia.
+  let crop;
+
+  if (mode === "sn") {
+    // Środkowy pas etykiety, gdzie zwykle jest ramka S/N.
+    crop = {
+      x: Math.round(srcW * 0.08),
+      y: Math.round(srcH * 0.34),
+      w: Math.round(srcW * 0.68),
+      h: Math.round(srcH * 0.22)
+    };
+  } else if (mode === "year") {
+    // Prawy dolny fragment, gdzie zwykle jest YEAR OF PRODUCTION.
+    crop = {
+      x: Math.round(srcW * 0.46),
+      y: Math.round(srcH * 0.43),
+      w: Math.round(srcW * 0.48),
+      h: Math.round(srcH * 0.30)
+    };
+  } else {
+    // Większy środek etykiety jako awaryjny fallback.
+    crop = {
+      x: Math.round(srcW * 0.04),
+      y: Math.round(srcH * 0.24),
+      w: Math.round(srcW * 0.88),
+      h: Math.round(srcH * 0.54)
+    };
+  }
+
+  crop.x = Math.max(0, Math.min(crop.x, srcW - 1));
+  crop.y = Math.max(0, Math.min(crop.y, srcH - 1));
+  crop.w = Math.max(1, Math.min(crop.w, srcW - crop.x));
+  crop.h = Math.max(1, Math.min(crop.h, srcH - crop.y));
+
+  const scale = mode === "year" ? 2.2 : 2.8;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(crop.w * scale);
+  canvas.height = Math.round(crop.h * scale);
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(image, crop.x, crop.y, crop.w, crop.h, 0, 0, canvas.width, canvas.height);
+
+  // Proste czyszczenie obrazu: szarość + kontrast + próg.
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imgData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const gray = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+    const contrast = (gray - 128) * 1.55 + 128;
+    const bw = contrast > 155 ? 255 : 0;
+
+    data[i] = bw;
+    data[i + 1] = bw;
+    data[i + 2] = bw;
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  return canvas;
+}
+
+function extractYearPrefixFromOcrText(text) {
+  const raw = String(text || "").toUpperCase();
+  const compact = raw.replace(/[^0-9]/g, " ");
+
+  const match = compact.match(/\b(20\d{2})\b/);
+  if (!match) return "";
+
+  return match[1].slice(-2);
+}
+
 function extractSerialFromOcrText(text) {
   const raw = String(text || "")
     .toUpperCase()
     .replace(/[\\|]/g, "/")
-    .replace(/[–—]/g, "-");
+    .replace(/[–—]/g, "-")
+    .replace(/O(?=\d)/g, "0")
+    .replace(/(?<=\d)O/g, "0");
 
   const prefixes = [
     "LQBN", "RQBN", "LSUX", "CDHI", "CQBM",
@@ -1241,38 +1383,56 @@ function extractSerialFromOcrText(text) {
   ];
 
   const prefixGroup = prefixes.join("|");
-  const lines = raw.split(/\n+/).map(line => line.replace(/\s+/g, "").replace(/\/+/g, "/"));
-
   const candidates = [];
+
+  // Najpierw linie, bo po OCR często S/N i numer są w tej samej linii.
+  const lines = raw
+    .split(/\n+/)
+    .map(line => line.replace(/\s+/g, "").replace(/\/+/, "/"));
 
   for (const line of lines) {
     if (!line) continue;
 
-    const rePrefix = new RegExp("(?:\\d{2}/)?(?:" + prefixGroup + ")[A-Z0-9]{4,16}", "g");
-    const prefMatches = line.match(rePrefix) || [];
-    candidates.push(...prefMatches);
+    // Numer z rokiem, np. 25/CDJ1234568 albo 22/5027350PL.
+    candidates.push(...(line.match(/\d{2}\/[A-Z0-9]{5,18}/g) || []));
 
-    const reNumeric = /\d{2}\/\d{6,8}[A-Z]{0,2}/g;
-    const numMatches = line.match(reNumeric) || [];
-    candidates.push(...numMatches);
+    // Numer z prefiksem bez roku, np. CDJ1234568, LSX35041877PL.
+    const rePrefix = new RegExp("(?:" + prefixGroup + ")[A-Z0-9]{4,18}", "g");
+    candidates.push(...(line.match(rePrefix) || []));
+
+    // Numer cyfrowy bez roku, np. 5027350PL. Rok dołożymy później z YEAR OF PRODUCTION.
+    candidates.push(...(line.match(/\b\d{6,8}[A-Z]{0,2}\b/g) || []));
   }
 
-  // Awaryjnie sprawdź też tekst po usunięciu spacji, ale ogranicz długości dopasowania.
-  const compact = raw.replace(/\s+/g, "").replace(/\/+/g, "/");
-  const rePrefixCompact = new RegExp("(?:\\d{2}/)?(?:" + prefixGroup + ")[A-Z0-9]{4,16}", "g");
-  candidates.push(...(compact.match(rePrefixCompact) || []));
+  // Awaryjnie tekst kompaktowy bez spacji.
+  const compact = raw.replace(/\s+/g, "").replace(/\/+/, "/");
+  candidates.push(...(compact.match(/\d{2}\/[A-Z0-9]{5,18}/g) || []));
 
   const cleaned = candidates
     .map(c => cleanSN(c))
     .map(c => c.replace(/[^A-Z0-9/]/g, ""))
+    .map(c => c.replace(/\/+/, "/"))
     .filter(c => c.length >= 6)
-    .filter(c => /[A-Z]/.test(c) || /\d{2}\/\d{6,8}/.test(c));
+    .filter(c => !/^20\d{2}$/.test(c))
+    .filter(c => !/^12V$/i.test(c))
+    .filter(c => !/^320KG$/i.test(c))
+    .filter(c => !/^SL51AALC$/i.test(c));
 
   if (cleaned.length === 0) return "";
 
-  // Preferuj numery z rokiem i ukośnikiem, np. 25/CDJ1234568.
-  const withYear = cleaned.find(c => /^\d{2}\//.test(c));
-  return withYear || cleaned[0];
+  // 1. Najlepszy przypadek: numer z XX/.
+  const withYear = cleaned.find(c => /^\d{2}\/[A-Z0-9]{5,18}$/.test(c));
+  if (withYear) return withYear;
+
+  // 2. Numer z prefiksem maszynowym bez roku.
+  const prefixOnly = cleaned.find(c => new RegExp("^(?:" + prefixGroup + ")[A-Z0-9]{4,18}$").test(c));
+  if (prefixOnly) return prefixOnly;
+
+  // 3. Numer cyfrowy bez roku.
+  const numericOnly = cleaned.find(c => /^\d{6,8}[A-Z]{0,2}$/.test(c));
+  if (numericOnly) return numericOnly;
+
+  return cleaned[0] || "";
 }
 
 function stopModuleScanning() {
