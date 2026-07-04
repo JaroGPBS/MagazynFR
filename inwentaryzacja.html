@@ -716,7 +716,7 @@
         listaCzesci.unshift(item);
 
         showInventoryStatus(
-          "✅ Dodano " + formatQty(qtyToAdd) + " szt. Razem: " + formatQty(newQty) + " — " + (item.nazwa || ""),
+          "Dodano " + formatQty(qtyToAdd) + " szt. Razem: " + formatQty(newQty) + " — " + (item.nazwa || ""),
           false
         );
       } else {
@@ -727,7 +727,7 @@
         });
 
         showInventoryStatus(
-          "✅ Dodano " + formatQty(qtyToAdd) + " szt. — " + (part.nazwa || ""),
+          "Dodano " + formatQty(qtyToAdd) + " szt. — " + (part.nazwa || ""),
           false
         );
       }
