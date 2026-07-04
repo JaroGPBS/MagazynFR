@@ -320,6 +320,12 @@
         remove.textContent = "✕";
         remove.title = "Usuń";
         remove.onclick = () => {
+          const name = item.nazwa || "tę pozycję";
+
+          if (!confirm("Czy na pewno chcesz usunąć z listy:\n\n" + name + "?")) {
+            return;
+          }
+
           listaCzesci.splice(index, 1);
           saveList();
           updateList();
@@ -516,21 +522,84 @@
       resultsBox.style.display = "block";
     }
 
-    function addPart(part) {
-      const exists = listaCzesci.find(item =>
-        String(item.indeks || "").trim().toUpperCase() === String(part.indeks || "").trim().toUpperCase()
+    function formatQty(value) {
+      const num = Number(value || 0);
+      if (!Number.isFinite(num)) return "0";
+      return Number.isInteger(num) ? String(num) : String(num).replace(".", ",");
+    }
+
+    function askPartQuantity(part) {
+      const partName = part && part.nazwa ? part.nazwa : "części";
+
+      let qtyText = prompt(
+        "Podaj ilość dla:\n\n" + partName,
+        "1"
       );
 
-      if (!exists) {
+      if (qtyText === null) return null;
+
+      qtyText = String(qtyText).replace(",", ".").trim();
+      const qty = Number(qtyText);
+
+      if (!qty || qty <= 0) {
+        alert("Wpisz ilość większą od 0.");
+        return null;
+      }
+
+      return qty;
+    }
+
+    function showInventoryStatus(message, isError) {
+      const status = document.getElementById("status");
+      if (!status) return;
+
+      status.innerText = message;
+      status.style.color = isError ? "#ffdddd" : "#b6ffb6";
+    }
+
+    function addPart(part) {
+      const qtyToAdd = askPartQuantity(part);
+
+      if (qtyToAdd === null) {
+        return false;
+      }
+
+      const partIndex = String(part.indeks || "").trim().toUpperCase();
+
+      const existingIndex = listaCzesci.findIndex(item =>
+        String(item.indeks || "").trim().toUpperCase() === partIndex
+      );
+
+      if (existingIndex >= 0) {
+        const item = listaCzesci[existingIndex];
+        const oldQty = Number(item.ilosc || 0);
+        const newQty = oldQty + qtyToAdd;
+
+        item.ilosc = newQty;
+
+        listaCzesci.splice(existingIndex, 1);
+        listaCzesci.unshift(item);
+
+        showInventoryStatus(
+          "✅ Dodano " + formatQty(qtyToAdd) + " szt. Razem: " + formatQty(newQty) + " — " + (item.nazwa || ""),
+          false
+        );
+      } else {
         listaCzesci.unshift({
           indeks: part.indeks,
           nazwa: part.nazwa,
-          ilosc: ""
+          ilosc: qtyToAdd
         });
+
+        showInventoryStatus(
+          "✅ Dodano " + formatQty(qtyToAdd) + " szt. — " + (part.nazwa || ""),
+          false
+        );
       }
 
       saveList();
       updateList();
+      return true;
     }
 
     function findPartByIndex(indeks) {
@@ -601,11 +670,13 @@
               return;
             }
 
-            addPart(part);
+            const added = addPart(part);
 
-            if ("vibrate" in navigator) navigator.vibrate(200);
-            const beep = document.getElementById("beepSound");
-            if (beep) beep.play().catch(() => {});
+            if (added) {
+              if ("vibrate" in navigator) navigator.vibrate(200);
+              const beep = document.getElementById("beepSound");
+              if (beep) beep.play().catch(() => {});
+            }
           });
         } else {
           alert("Nie wykryto kamery.");
