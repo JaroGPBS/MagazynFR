@@ -111,7 +111,6 @@
     ul {
       list-style: none;
       padding: 0;
-      margin: 0;
     }
 
     li {
@@ -308,25 +307,25 @@
 
 
     .module-table-header {
-  display: grid;
-  grid-template-columns: 24% 1fr 34px;
-  gap: 8px;
-  align-items: center;
-  margin-top: 4px;
-  margin-bottom: 0;
-  padding: 0 2px;
-  color: #cccccc;
-  font-size: 0.72rem;
-  font-weight: bold;
-  text-transform: uppercase;
-}
+      display: grid;
+      grid-template-columns: 24% 1fr 34px;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      margin-bottom: 2px;
+      padding: 0 2px;
+      color: #cccccc;
+      font-size: 0.72rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
 
     .module-row {
       display: grid;
       grid-template-columns: 24% 1fr 34px;
       gap: 8px;
       align-items: center;
-      padding: 5px 0;
+      padding: 7px 0;
       border-bottom: 1px solid #666;
     }
 
@@ -380,6 +379,67 @@
     .hidden {
       display: none !important;
     }
+
+    .app-dialog {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.78);
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      color: #f5f5f5;
+    }
+
+    .app-dialog-box {
+      width: 100%;
+      max-width: 360px;
+      background: #333;
+      border: 1px solid #666;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    }
+
+    .app-dialog-title {
+      font-size: 1.05rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #fff;
+      text-align: center;
+    }
+
+    .app-dialog-message {
+      white-space: pre-line;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      color: #e5e5e5;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .app-dialog-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .app-dialog-actions button {
+      flex: 1;
+      height: 44px;
+      margin: 0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+
+    .app-dialog-cancel {
+      background: #555;
+    }
+
+    .app-dialog-ok {
+      background: #2e7d32;
+    }
+
   </style>
 </head>
 
@@ -524,10 +584,89 @@
     </div>
   </div>
 
+
+<!-- OKNA APLIKACJI -->
+<div id="appDialog" class="app-dialog">
+  <div class="app-dialog-box">
+    <div id="appDialogTitle" class="app-dialog-title">Komunikat</div>
+    <div id="appDialogMessage" class="app-dialog-message"></div>
+    <div class="app-dialog-actions">
+      <button id="appDialogCancel" class="app-dialog-cancel" type="button">Anuluj</button>
+      <button id="appDialogOk" class="app-dialog-ok" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
   <script>
-    function goBack() {
+    
+
+let appDialogResolve = null;
+
+function appDialog(options) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById("appDialog");
+    const title = document.getElementById("appDialogTitle");
+    const message = document.getElementById("appDialogMessage");
+    const cancelBtn = document.getElementById("appDialogCancel");
+    const okBtn = document.getElementById("appDialogOk");
+
+    if (!overlay || !title || !message || !cancelBtn || !okBtn) {
+      resolve(true);
+      return;
+    }
+
+    appDialogResolve = resolve;
+
+    title.textContent = options.title || "Komunikat";
+    message.textContent = options.message || "";
+    okBtn.textContent = options.okText || "OK";
+    cancelBtn.textContent = options.cancelText || "Anuluj";
+    cancelBtn.style.display = options.showCancel ? "block" : "none";
+
+    okBtn.onclick = () => closeAppDialog(true);
+    cancelBtn.onclick = () => closeAppDialog(false);
+
+    overlay.style.display = "flex";
+    setTimeout(() => okBtn.focus(), 50);
+  });
+}
+
+function closeAppDialog(value) {
+  const overlay = document.getElementById("appDialog");
+  if (overlay) overlay.style.display = "none";
+
+  if (appDialogResolve) {
+    const resolve = appDialogResolve;
+    appDialogResolve = null;
+    resolve(value);
+  }
+}
+
+function appAlert(message, title = "Komunikat") {
+  return appDialog({
+    title,
+    message,
+    okText: "OK",
+    showCancel: false
+  });
+}
+
+function appConfirm(message, title = "Potwierdzenie") {
+  return appDialog({
+    title,
+    message,
+    okText: "OK",
+    cancelText: "Anuluj",
+    showCancel: true
+  });
+}
+
+function goBack() {
       window.location.replace("index.html");
     }
+
+
+
 
     const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
 
@@ -694,10 +833,10 @@
         remove.textContent = "✕";
         remove.title = "Usuń";
 
-        remove.onclick = () => {
+        remove.onclick = async () => {
           const sn = cleanSN(item.value || "");
 
-          if (!confirm("Czy na pewno chcesz usunąć moduł z listy?\n\n" + sn)) {
+          if (!(await appConfirm("Czy na pewno chcesz usunąć moduł z listy?\n\n" + sn, "Usuń moduł"))) {
             return;
           }
 
@@ -769,7 +908,7 @@ function addManual() {
       const val = cleanSN(input.value);
 
       if (!val || val.length < 3) {
-        alert("Kod zbyt krótki lub pusty.");
+        appAlert("Kod zbyt krótki lub pusty.", "Błąd");
         return;
       }
 
@@ -978,7 +1117,7 @@ function addManual() {
       const qty = Number(document.getElementById("modalQty").value || 0);
 
       if (!qty || qty <= 0) {
-        alert("Podaj ilość większą od zera.");
+        appAlert("Podaj ilość większą od zera.", "Błąd");
         return;
       }
 
@@ -1049,10 +1188,10 @@ function addManual() {
         remove.textContent = "✕";
         remove.title = "Usuń";
 
-        remove.onclick = () => {
+        remove.onclick = async () => {
           const name = item.nazwa || "tę pozycję";
 
-          if (!confirm("Czy na pewno chcesz usunąć część z listy?\n\n" + name)) {
+          if (!(await appConfirm("Czy na pewno chcesz usunąć część z listy?\n\n" + name, "Usuń część"))) {
             return;
           }
 
@@ -1068,7 +1207,7 @@ function addManual() {
       });
     }
 
-    function sendData() {
+    async function sendData() {
       const login = localStorage.getItem("login") || "";
       const trasa = localStorage.getItem("trasa") || "";
       const przewoznik = localStorage.getItem("przewoznik") || "";
@@ -1076,7 +1215,7 @@ function addManual() {
       const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
 
       if (!login || !trasa || !przewoznik || !tablica || (codes.length === 0 && listaCzesci.length === 0)) {
-        alert("Brakuje danych lub lista modułów/części jest pusta.");
+        await appAlert("Brakuje danych lub lista modułów/części jest pusta.", "Błąd");
         return;
       }
 
@@ -1084,12 +1223,12 @@ function addManual() {
         const typ = (c.note || "").toString().trim().toUpperCase();
 
         if (!allowed.includes(typ)) {
-          alert(`Nieprawidłowy TYP: "${typ}". Wybierz z listy.`);
+          await appAlert(`Nieprawidłowy TYP: "${typ}". Wybierz z listy.`, "Błąd");
           return;
         }
       }
 
-      if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+      if (!(await appConfirm("Czy na pewno chcesz wysłać dane?", "Wysyłanie danych"))) return;
 
       document.getElementById("sendingOverlay").style.display = "flex";
 
@@ -1111,8 +1250,8 @@ function addManual() {
 
       fetch(scriptURL, { method: "POST", body: formData })
         .then(res => res.text())
-        .then(txt => {
-          alert("✅ Dane wysłane.");
+        .then(async txt => {
+          await appAlert("✅ Dane wysłane.", "Gotowe");
 
           codes = [];
           localStorage.removeItem("codesWZ");
@@ -1219,13 +1358,13 @@ function addManual() {
             if (beep) beep.play().catch(() => {});
           });
         } else {
-          alert("Nie wykryto kamery.");
+          appAlert("Nie wykryto kamery.", "Kamera");
           isModuleScanning = false;
           document.getElementById("startScanModulBtn").style.display = "inline-block";
           document.getElementById("readerModul").style.display = "none";
         }
       }).catch(err => {
-        alert("Błąd kamery: " + err);
+        appAlert("Błąd kamery: " + err, "Kamera");
         isModuleScanning = false;
         document.getElementById("startScanModulBtn").style.display = "inline-block";
         document.getElementById("readerModul").style.display = "none";
