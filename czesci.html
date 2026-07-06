@@ -281,6 +281,72 @@
       border-color: #aa3333;
     }
 
+
+
+    .app-dialog-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .app-dialog-box {
+      width: 100%;
+      max-width: 360px;
+      background: #333;
+      color: #f5f5f5;
+      border: 1px solid #666;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      text-align: center;
+    }
+
+    .app-dialog-title {
+      font-size: 1.12rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .app-dialog-message {
+      font-size: 0.95rem;
+      line-height: 1.35;
+      color: #dddddd;
+      margin-bottom: 16px;
+      white-space: pre-line;
+    }
+
+    .app-dialog-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .app-dialog-buttons button {
+      flex: 1;
+      height: 44px;
+      margin: 0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+
+    .app-dialog-cancel {
+      background: #555 !important;
+    }
+
+    .app-dialog-ok {
+      background: #2e7d32 !important;
+    }
+
+    .app-dialog-danger {
+      background: #aa3333 !important;
+    }
+
+
     .status {
       font-size: 0.95rem;
       color: #ffdddd;
@@ -372,7 +438,58 @@
     </div>
   </div>
 
+
+
+  <!-- OKIENKO APLIKACJI -->
+  <div id="appDialog" class="app-dialog-overlay">
+    <div class="app-dialog-box">
+      <div id="appDialogTitle" class="app-dialog-title"></div>
+      <div id="appDialogMessage" class="app-dialog-message"></div>
+      <div id="appDialogButtons" class="app-dialog-buttons"></div>
+    </div>
+  </div>
   <script>
+
+    function showAppDialog(title, message, buttons) {
+      const overlay = document.getElementById("appDialog");
+      const titleEl = document.getElementById("appDialogTitle");
+      const messageEl = document.getElementById("appDialogMessage");
+      const buttonsEl = document.getElementById("appDialogButtons");
+
+      return new Promise(resolve => {
+        titleEl.textContent = title || "Komunikat";
+        messageEl.textContent = message || "";
+        buttonsEl.innerHTML = "";
+
+        buttons.forEach(btn => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = btn.text;
+          button.className = btn.className || "app-dialog-ok";
+          button.onclick = () => {
+            overlay.style.display = "none";
+            resolve(btn.value);
+          };
+          buttonsEl.appendChild(button);
+        });
+
+        overlay.style.display = "flex";
+      });
+    }
+
+    function showAppAlert(title, message, okText = "OK") {
+      return showAppDialog(title, message, [
+        { text: okText, value: true, className: "app-dialog-ok" }
+      ]);
+    }
+
+    function showAppConfirm(title, message, okText = "OK", cancelText = "Anuluj", danger = false) {
+      return showAppDialog(title, message, [
+        { text: cancelText, value: false, className: "app-dialog-cancel" },
+        { text: okText, value: true, className: danger ? "app-dialog-danger" : "app-dialog-ok" }
+      ]);
+    }
+
     const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
 
     let bazaCzesci = [];
@@ -434,7 +551,17 @@
         remove.className = "remove-btn";
         remove.textContent = "✕";
         remove.title = "Usuń";
-        remove.onclick = () => {
+        remove.onclick = async () => {
+          const ok = await showAppConfirm(
+            "Usuń pozycję",
+            "Czy na pewno chcesz usunąć z listy:\n\n" + (item.nazwa || "tę część") + "?",
+            "Usuń",
+            "Anuluj",
+            true
+          );
+
+          if (!ok) return;
+
           listaCzesci.splice(index, 1);
           saveLista();
           updateList();
@@ -658,14 +785,14 @@
       document.getElementById("partModal").style.display = "none";
     }
 
-    function confirmPart(type) {
+    async function confirmPart(type) {
       if (!selectedPart) return;
 
       const qtyRaw = document.getElementById("modalQty").value;
       const qty = Number(qtyRaw || 0);
 
       if (!qty || qty <= 0) {
-        alert("Podaj ilość większą od zera.");
+        await showAppAlert("Błędna ilość", "Podaj ilość większą od zera.");
         return;
       }
 
@@ -701,20 +828,21 @@
       updateList();
     }
 
-    function sendData() {
+    async function sendData() {
       const ekipaTrasa = String(localStorage.getItem("serwisEkipa") || "").trim().toUpperCase();
 
       if (!ekipaTrasa) {
-        alert("Brak nazwy ekipy. Wróć na stronę główną i wejdź ponownie przez Serwisy części.");
+        await showAppAlert("Brak ekipy", "Brak nazwy ekipy.\nWróć na stronę główną i wejdź ponownie przez Serwisy części.");
         return;
       }
 
       if (listaCzesci.length === 0) {
-        alert("Lista części jest pusta.");
+        await showAppAlert("Pusta lista", "Lista części jest pusta.");
         return;
       }
 
-      if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+      const sendOk = await showAppConfirm("Wysyłanie danych", "Czy na pewno chcesz wysłać dane?", "Wyślij", "Anuluj");
+      if (!sendOk) return;
 
       document.getElementById("sendingOverlay").style.display = "flex";
 
@@ -725,8 +853,8 @@
 
       fetch(scriptURL, { method: "POST", body: formData })
         .then(res => res.text())
-        .then(txt => {
-          alert("✅ Części wysłane.");
+        .then(async txt => {
+          await showAppAlert("Gotowe", "✅ Części wysłane.");
           listaCzesci = [];
           localStorage.removeItem("serwisyCzesciLista");
           localStorage.removeItem("serwisEkipa");
@@ -736,6 +864,7 @@
         .catch(err => {
           document.getElementById("sendingOverlay").style.display = "none";
           document.getElementById("status").innerText = "❌ Błąd: " + err;
+          showAppAlert("Błąd", "❌ Błąd: " + err);
         });
     }
 
@@ -761,7 +890,7 @@
             const part = findPartByIndex(scanned);
 
             if (!part) {
-              alert("Nie znaleziono części dla zeskanowanego kodu.");
+              showAppAlert("Brak części", "Nie znaleziono części dla zeskanowanego kodu.");
               return;
             }
 
@@ -773,13 +902,13 @@
             if (beep) beep.play().catch(() => {});
           });
         } else {
-          alert("Nie wykryto kamery.");
+          showAppAlert("Brak kamery", "Nie wykryto kamery.");
           isScanning = false;
           document.getElementById("startScanBtn").style.display = "inline-block";
           document.getElementById("reader").style.display = "none";
         }
       }).catch(err => {
-        alert("Błąd kamery: " + err);
+        showAppAlert("Błąd kamery", "Błąd kamery: " + err);
         isScanning = false;
         document.getElementById("startScanBtn").style.display = "inline-block";
         document.getElementById("reader").style.display = "none";
