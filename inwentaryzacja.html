@@ -294,6 +294,67 @@
       font-weight: bold;
       border-color: #aa3333;
     }
+
+    .app-dialog {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.78);
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      color: #f5f5f5;
+    }
+
+    .app-dialog-box {
+      width: 100%;
+      max-width: 360px;
+      background: #333;
+      border: 1px solid #666;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    }
+
+    .app-dialog-title {
+      font-size: 1.05rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #fff;
+      text-align: center;
+    }
+
+    .app-dialog-message {
+      white-space: pre-line;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      color: #e5e5e5;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .app-dialog-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .app-dialog-actions button {
+      flex: 1;
+      height: 44px;
+      margin: 0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+
+    .app-dialog-cancel {
+      background: #555;
+    }
+
+    .app-dialog-ok {
+      background: #2e7d32;
+    }
+
   </style>
 </head>
 
@@ -359,7 +420,83 @@
     </div>
   </div>
 
+
+<!-- OKNA APLIKACJI -->
+<div id="appDialog" class="app-dialog">
+  <div class="app-dialog-box">
+    <div id="appDialogTitle" class="app-dialog-title">Komunikat</div>
+    <div id="appDialogMessage" class="app-dialog-message"></div>
+    <div class="app-dialog-actions">
+      <button id="appDialogCancel" class="app-dialog-cancel" type="button">Anuluj</button>
+      <button id="appDialogOk" class="app-dialog-ok" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
   <script>
+
+
+let appDialogResolve = null;
+
+function appDialog(options) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById("appDialog");
+    const title = document.getElementById("appDialogTitle");
+    const message = document.getElementById("appDialogMessage");
+    const cancelBtn = document.getElementById("appDialogCancel");
+    const okBtn = document.getElementById("appDialogOk");
+
+    if (!overlay || !title || !message || !cancelBtn || !okBtn) {
+      resolve(true);
+      return;
+    }
+
+    appDialogResolve = resolve;
+
+    title.textContent = options.title || "Komunikat";
+    message.textContent = options.message || "";
+    okBtn.textContent = options.okText || "OK";
+    cancelBtn.textContent = options.cancelText || "Anuluj";
+    cancelBtn.style.display = options.showCancel ? "block" : "none";
+
+    okBtn.onclick = () => closeAppDialog(true);
+    cancelBtn.onclick = () => closeAppDialog(false);
+
+    overlay.style.display = "flex";
+    setTimeout(() => okBtn.focus(), 50);
+  });
+}
+
+function closeAppDialog(value) {
+  const overlay = document.getElementById("appDialog");
+  if (overlay) overlay.style.display = "none";
+
+  if (appDialogResolve) {
+    const resolve = appDialogResolve;
+    appDialogResolve = null;
+    resolve(value);
+  }
+}
+
+function appAlert(message, title = "Komunikat") {
+  return appDialog({
+    title,
+    message,
+    okText: "OK",
+    showCancel: false
+  });
+}
+
+function appConfirm(message, title = "Potwierdzenie") {
+  return appDialog({
+    title,
+    message,
+    okText: "OK",
+    cancelText: "Anuluj",
+    showCancel: true
+  });
+}
+
     const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
 
     let bazaCzesci = [];
@@ -367,7 +504,10 @@
     let html5Qr;
     let isScanning = false;
 
-    function goBack() {
+    
+
+
+function goBack() {
       window.location.href = "index.html";
     }
 
@@ -412,10 +552,10 @@
         remove.className = "remove-btn";
         remove.textContent = "✕";
         remove.title = "Usuń";
-        remove.onclick = () => {
+        remove.onclick = async () => {
           const name = item.nazwa || "tę pozycję";
 
-          if (!confirm("Czy na pewno chcesz usunąć z listy:\n\n" + name + "?")) {
+          if (!(await appConfirm("Czy na pewno chcesz usunąć z listy:\n\n" + name + "?", "Usuń pozycję"))) {
             return;
           }
 
@@ -716,7 +856,7 @@
         listaCzesci.unshift(item);
 
         showInventoryStatus(
-          "Dodano " + formatQty(qtyToAdd) + " szt. Razem: " + formatQty(newQty) + " — " + (item.nazwa || ""),
+          "✅ Dodano " + formatQty(qtyToAdd) + " szt. Razem: " + formatQty(newQty) + " — " + (item.nazwa || ""),
           false
         );
       } else {
@@ -727,7 +867,7 @@
         });
 
         showInventoryStatus(
-          "Dodano " + formatQty(qtyToAdd) + " szt. — " + (part.nazwa || ""),
+          "✅ Dodano " + formatQty(qtyToAdd) + " szt. — " + (part.nazwa || ""),
           false
         );
       }
@@ -742,21 +882,21 @@
       return bazaCzesci.find(part => String(part.indeks || "").trim().toUpperCase() === val);
     }
 
-    function sendData() {
+    async function sendData() {
       if (listaCzesci.length === 0) {
-        alert("Lista inwentaryzacji jest pusta.");
+        await appAlert("Lista inwentaryzacji jest pusta.", "Błąd");
         return;
       }
 
       for (const item of listaCzesci) {
         const qty = Number(item.ilosc || 0);
         if (!qty || qty <= 0) {
-          alert("Każda część musi mieć wpisaną ilość większą od 0.");
+          await appAlert("Każda część musi mieć wpisaną ilość większą od 0.", "Błąd");
           return;
         }
       }
 
-      if (!confirm("Czy na pewno wysłać inwentaryzację?")) return;
+      if (!(await appConfirm("Czy na pewno wysłać inwentaryzację?", "Wysyłanie inwentaryzacji"))) return;
 
       document.getElementById("sendingOverlay").style.display = "flex";
 
@@ -766,8 +906,8 @@
 
       fetch(scriptURL, { method: "POST", body: formData })
         .then(res => res.text())
-        .then(txt => {
-          alert("✅ Inwentaryzacja wysłana.");
+        .then(async txt => {
+          await appAlert("✅ Inwentaryzacja wysłana.", "Gotowe");
           listaCzesci = [];
           localStorage.removeItem("inwentaryzacjaLista");
           updateList();
@@ -801,7 +941,7 @@
             const part = findPartByIndex(scanned);
 
             if (!part) {
-              alert("Nie znaleziono części dla zeskanowanego kodu.");
+              appAlert("Nie znaleziono części dla zeskanowanego kodu.", "Skan QR");
               return;
             }
 
@@ -814,13 +954,13 @@
             }
           });
         } else {
-          alert("Nie wykryto kamery.");
+          appAlert("Nie wykryto kamery.", "Kamera");
           isScanning = false;
           document.getElementById("startScanBtn").style.display = "flex";
           document.getElementById("reader").style.display = "none";
         }
       }).catch(err => {
-        alert("Błąd kamery: " + err);
+        appAlert("Błąd kamery: " + err, "Kamera");
         isScanning = false;
         document.getElementById("startScanBtn").style.display = "flex";
         document.getElementById("reader").style.display = "none";
