@@ -122,10 +122,37 @@
       border-bottom: 1px solid #666;
     }
 
+    .module-row {
+      display: grid;
+      grid-template-columns: minmax(74px, 24%) minmax(0, 1fr) 34px 28px;
+      gap: 6px;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #666;
+    }
+
+    .module-list-head {
+      display: grid;
+      grid-template-columns: minmax(74px, 24%) minmax(0, 1fr) 34px 28px;
+      gap: 6px;
+      align-items: center;
+      margin-top: 8px;
+      padding: 0 0 2px;
+      color: #cccccc;
+      font-size: 0.72rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .module-list-head span:nth-child(3) {
+      text-align: center;
+    }
+
     .note-input {
-      width: 22%;
-      min-width: 50px;
-      padding: 6px;
+      width: 100%;
+      min-width: 0;
+      padding: 6px 4px;
       border: 1px solid #555;
       border-radius: 4px;
       font-size: 0.9rem;
@@ -134,14 +161,33 @@
       color: #f5f5f5;
     }
 
+    .note-input::-webkit-calendar-picker-indicator,
+    input[list]::-webkit-calendar-picker-indicator {
+      display: none !important;
+      opacity: 0 !important;
+    }
+
     .code-text {
-      flex: 1;
-      font-size: 0.95rem;
-      word-break: break-word;
+      width: 100%;
+      min-width: 0;
+      font-size: 0.9rem;
       background-color: #1c1c1c;
       color: #f5f5f5;
       border: 1px solid #555;
-      padding: 6px;
+      padding: 6px 5px;
+    }
+
+    .nok-only {
+      width: 22px;
+      height: 22px;
+      margin: 0 auto;
+      cursor: pointer;
+      accent-color: #d32f2f;
+    }
+
+    .module-row.nok-row .note-input,
+    .module-row.nok-row .code-text {
+      border-color: #d32f2f;
     }
 
     .remove-btn {
@@ -372,6 +418,13 @@
     <span class="badge" id="codeCount">0</span>
   </div>
 
+  <div class="module-list-head">
+    <span>TYP</span>
+    <span>NUMER S/N</span>
+    <span>NOK</span>
+    <span></span>
+  </div>
+
   <ul id="codeList"></ul>
 </div>
 
@@ -530,6 +583,7 @@ function updateList() {
 
   codes.forEach((item, index) => {
     const li = document.createElement("li");
+    li.className = "module-row" + (item.nok ? " nok-row" : "");
 
     const inputNote = document.createElement("input");
     inputNote.type = "text";
@@ -570,22 +624,14 @@ function updateList() {
     const nokCheckbox = document.createElement("input");
     nokCheckbox.type = "checkbox";
     nokCheckbox.checked = !!item.nok;
-    nokCheckbox.style.width = "18px";
-    nokCheckbox.style.height = "18px";
-    nokCheckbox.style.cursor = "pointer";
+    nokCheckbox.className = "nok-only";
+    nokCheckbox.title = "Zaznacz jako NOK";
 
     nokCheckbox.onchange = () => {
       codes[index].nok = nokCheckbox.checked;
       saveCodes();
+      updateList();
     };
-
-    const nokLabel = document.createElement("label");
-    nokLabel.style.display = "flex";
-    nokLabel.style.alignItems = "center";
-    nokLabel.style.gap = "4px";
-    nokLabel.style.marginLeft = "auto";
-    nokLabel.appendChild(nokCheckbox);
-    nokLabel.appendChild(document.createTextNode("NOK"));
 
     const remove = document.createElement("span");
     remove.className = "remove-btn";
@@ -595,7 +641,7 @@ function updateList() {
 
     li.appendChild(inputNote);
     li.appendChild(codeText);
-    li.appendChild(nokLabel);
+    li.appendChild(nokCheckbox);
     li.appendChild(remove);
     list.appendChild(li);
   });
@@ -707,6 +753,14 @@ function addManual() {
 }
 
 function removeCode(index) {
+  const item = codes[index];
+  const typ = item && item.note ? item.note : "TYP";
+  const numer = item && item.value ? item.value : "ten moduł";
+
+  if (!confirm("Czy na pewno chcesz usunąć moduł?\n\n" + typ + " - " + numer)) {
+    return;
+  }
+
   codes.splice(index, 1);
   saveCodes();
   updateList();
