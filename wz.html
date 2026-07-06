@@ -305,6 +305,77 @@
       border-color: #aa3333;
     }
 
+
+    .module-table-header {
+      display: grid;
+      grid-template-columns: 24% 1fr 34px;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      margin-bottom: 2px;
+      padding: 0 2px;
+      color: #cccccc;
+      font-size: 0.72rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .module-row {
+      display: grid;
+      grid-template-columns: 24% 1fr 34px;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #666;
+    }
+
+    .module-row.nok-row {
+      border-color: #8a3333;
+    }
+
+    .module-row .note-input {
+      width: 100%;
+      min-width: 0;
+      height: 40px;
+      margin: 0;
+      padding: 6px 8px;
+      font-size: 0.92rem;
+      text-align: left;
+      border-radius: 7px;
+    }
+
+    .module-row .code-text {
+      width: 100%;
+      min-width: 0;
+      height: 40px;
+      margin: 0;
+      padding: 6px 8px;
+      font-size: 0.92rem;
+      border-radius: 7px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .module-row .remove-btn {
+      width: 34px;
+      min-width: 34px;
+      text-align: center;
+      padding: 0;
+      font-size: 1.45rem;
+      line-height: 1;
+    }
+
+    input[list]::-webkit-calendar-picker-indicator {
+      display: none !important;
+      opacity: 0 !important;
+    }
+
+    .module-row .note-input::-webkit-calendar-picker-indicator {
+      display: none !important;
+      opacity: 0 !important;
+    }
+
+
     .hidden {
       display: none !important;
     }
@@ -364,6 +435,12 @@
         <div class="list-header">
           <h3 style="margin:0; font-size:0.95rem;">Lista kodów</h3>
           <span class="badge" id="codeCount">0</span>
+        </div>
+
+        <div class="module-table-header">
+          <div>TYP</div>
+          <div>NUMER S/N</div>
+          <div></div>
         </div>
 
         <ul id="codeList"></ul>
@@ -566,6 +643,7 @@
 
       codes.forEach((item, index) => {
         const li = document.createElement("li");
+        li.className = "module-row";
 
         const inputNote = document.createElement("input");
         inputNote.type = "text";
@@ -573,7 +651,14 @@
         inputNote.className = "note-input";
         inputNote.value = item.note || "";
         inputNote.setAttribute("list", "typList");
+        inputNote.autocomplete = "off";
         inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
+
+        inputNote.onclick = () => {
+          if (typeof inputNote.showPicker === "function") {
+            inputNote.showPicker();
+          }
+        };
 
         inputNote.oninput = () => {
           const val = inputNote.value.toUpperCase().trim();
@@ -607,7 +692,14 @@
         remove.className = "remove-btn";
         remove.textContent = "✕";
         remove.title = "Usuń";
+
         remove.onclick = () => {
+          const sn = cleanSN(item.value || "");
+
+          if (!confirm("Czy na pewno chcesz usunąć moduł z listy?\n\n" + sn)) {
+            return;
+          }
+
           codes.splice(index, 1);
           saveCodes();
           updateList();
@@ -957,6 +1049,12 @@ function addManual() {
         remove.title = "Usuń";
 
         remove.onclick = () => {
+          const name = item.nazwa || "tę pozycję";
+
+          if (!confirm("Czy na pewno chcesz usunąć część z listy?\n\n" + name)) {
+            return;
+          }
+
           listaCzesci.splice(index, 1);
           savePartsList();
           updatePartsList();
