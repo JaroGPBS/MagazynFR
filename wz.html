@@ -1346,7 +1346,7 @@ function addManual() {
           html5QrModul.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
             stopModuleScanning();
 
-            const val = (text || "").toUpperCase().trim();
+            const val = cleanSN(text);
             const exists = codes.find(c => cleanSN(c.value) === val);
 
             if (!exists && val) {
