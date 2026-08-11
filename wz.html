@@ -762,13 +762,16 @@ function goBack() {
     }
 
     function cleanSN(value) {
-      let val = String(value || "").toUpperCase().trim();
+  let val = String(value || "").toUpperCase().trim();
 
-      val = val.replace(/\s*MZ\s*$/i, "");
-      val = val.replace(/\s+([A-Z]{2})$/i, "$1");
+  // Usuń "MZ" oraz wszystko, co znajduje się po nim
+  val = val.replace(/\s+MZ(?:\s+.*)?$/i, "");
 
-      return val.trim();
-    }
+  // Usuń ewentualną spację przed dwuliterową końcówką
+  val = val.replace(/\s+([A-Z]{2})$/i, "$1");
+
+  return val.trim();
+}
 
     function saveCodes() {
       localStorage.setItem("codesWZ", JSON.stringify(codes));
