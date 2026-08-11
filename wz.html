@@ -1360,6 +1360,7 @@ function addManual() {
             const beep = document.getElementById("beepSound");
             if (beep) beep.play().catch(() => {});
           });
+          
         } else {
           appAlert("Nie wykryto kamery.", "Kamera");
           isModuleScanning = false;
