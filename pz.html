@@ -815,7 +815,10 @@ function formatManualSN(input) {
 function cleanSN(value) {
   let val = String(value || "").toUpperCase().trim();
 
-  val = val.replace(/\s*MZ\s*$/i, "");
+  // Usuń "MZ" oraz wszystko, co znajduje się po nim
+  val = val.replace(/\s+MZ(?:\s+.*)?$/i, "");
+
+  // Usuń ewentualną spację przed dwuliterową końcówką
   val = val.replace(/\s+([A-Z]{2})$/i, "$1");
 
   return val.trim();
