@@ -2,6 +2,7 @@
 // Ten plik nie wysyła danych i nie zmienia stanu magazynowego.
 
 const TRANSPORT_SESSION_ID_KEY = "transportSessionId";
+const TRANSPORT_SESSION_DATA_KEY = "transportSessionData_v1";
 
 function cleanSN(value) {
   let val = String(value || "").toUpperCase().trim();
@@ -85,15 +86,75 @@ function getTransportSessionId() {
   return String(localStorage.getItem(TRANSPORT_SESSION_ID_KEY) || "").trim();
 }
 
+function getTransportSessionData() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TRANSPORT_SESSION_DATA_KEY) || "null");
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function saveTransportSessionData() {
+  const id = getTransportSessionId();
+  const trasa = String(localStorage.getItem("trasa") || "").trim();
+  const przewoznik = String(localStorage.getItem("przewoznik") || "").trim();
+  const tablica = String(localStorage.getItem("tablica") || "").trim();
+  const tablicaSam = String(localStorage.getItem("tablicaSam") || "").trim();
+  const tablicaNacz = String(localStorage.getItem("tablicaNacz") || "").trim();
+
+  if (!id || !trasa || !przewoznik || !tablica) return false;
+
+  localStorage.setItem(TRANSPORT_SESSION_DATA_KEY, JSON.stringify({
+    id,
+    trasa,
+    przewoznik,
+    tablica,
+    tablicaSam,
+    tablicaNacz
+  }));
+
+  return true;
+}
+
+function restoreTransportSessionData() {
+  const data = getTransportSessionData();
+  if (!data || !data.id) return false;
+
+  // Nie nadpisuj świadomie rozpoczętej nowej sesji innym ID.
+  const currentId = getTransportSessionId();
+  if (currentId && currentId !== data.id) return false;
+
+  localStorage.setItem(TRANSPORT_SESSION_ID_KEY, data.id);
+
+  if (data.trasa) localStorage.setItem("trasa", data.trasa);
+  if (data.przewoznik) localStorage.setItem("przewoznik", data.przewoznik);
+  if (data.tablica) localStorage.setItem("tablica", data.tablica);
+  if (data.tablicaSam) localStorage.setItem("tablicaSam", data.tablicaSam);
+  if (data.tablicaNacz) localStorage.setItem("tablicaNacz", data.tablicaNacz);
+
+  return true;
+}
+
 function ensureTransportSessionId() {
   let id = getTransportSessionId();
   if (!id) {
     id = createTransportSessionId();
     localStorage.setItem(TRANSPORT_SESSION_ID_KEY, id);
   }
+
+  // Gdy dane auta są już wpisane, od razu zachowaj ich kopię dla całej sesji.
+  saveTransportSessionData();
   return id;
 }
 
 function clearTransportSessionId() {
   localStorage.removeItem(TRANSPORT_SESSION_ID_KEY);
+  localStorage.removeItem(TRANSPORT_SESSION_DATA_KEY);
 }
+
+// Stare ekrany PZ/WZ po udanej wysyłce czyszczą pola trasy.
+// Przy aktywnej sesji odtwarzamy je automatycznie przed uruchomieniem strony.
+document.addEventListener("DOMContentLoaded", () => {
+  restoreTransportSessionData();
+});
