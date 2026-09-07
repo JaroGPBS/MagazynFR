@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Le Magazynier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="common.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Great+Vibes&display=swap" rel="stylesheet">
 
   <style>
@@ -44,9 +45,7 @@
       margin-left: 30px;
     }
 
-    .logo-left .main {
-      font-size: 3rem;
-    }
+    .logo-left .main { font-size: 3rem; }
 
     .logo-left .sub {
       font-size: 2rem;
@@ -63,13 +62,8 @@
       border-radius: 4px;
     }
 
-    input.uppercase {
-      text-transform: uppercase;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    input.uppercase { text-transform: uppercase; }
+    .hidden { display: none !important; }
 
     #form-section {
       display: flex;
@@ -88,15 +82,51 @@
       transition: background-color 0.2s;
     }
 
-    button:hover {
-      background-color: #888;
-    }
+    button:hover { background-color: #888; }
 
     .main-menu {
       display: flex;
       flex-direction: column;
       gap: 14px;
       margin-top: 20px;
+    }
+
+    .main-menu > button {
+      width: 100%;
+      height: 52px;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .session-card {
+      margin: 4px 0 12px;
+      padding: 10px 12px;
+      border: 1px solid #5d755f;
+      border-radius: 8px;
+      background: #263628;
+    }
+
+    .session-title {
+      font-size: 0.78rem;
+      font-weight: bold;
+      color: #b8d9ba;
+      margin-bottom: 4px;
+    }
+
+    .session-summary {
+      font-size: 0.9rem;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .session-end-btn {
+      width: 100%;
+      height: 38px;
+      margin-top: 8px;
+      padding: 0 10px;
+      background: #8a4b24;
+      font-size: 0.85rem;
+      font-weight: bold;
     }
 
     .inventory-wrap {
@@ -116,18 +146,10 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
-    }
-
-    .main-menu > button {
-      width: 100%;
-      height: 52px;
-      font-size: 1.1rem;
-      font-weight: bold;
     }
 
     .form-buttons {
@@ -142,17 +164,9 @@
       font-weight: bold;
     }
 
-    .ok-btn {
-      background-color: #2e7d32;
-    }
-
-    .ok-btn:hover {
-      background-color: #3fa344;
-    }
-
-    .back-btn {
-      background-color: #555;
-    }
+    .ok-btn { background-color: #2e7d32; }
+    .ok-btn:hover { background-color: #3fa344; }
+    .back-btn { background-color: #555; }
 
     .logout-btn {
       background-color: #aa3333;
@@ -164,9 +178,7 @@
       display: block;
     }
 
-    .logout-btn:hover {
-      background-color: #cc4444;
-    }
+    .logout-btn:hover { background-color: #cc4444; }
 
     .footer-logo {
       margin-top: 20px;
@@ -225,9 +237,7 @@
       margin-bottom: 12px;
     }
 
-    .team-modal-input::placeholder {
-      color: #6b5b4a !important;
-    }
+    .team-modal-input::placeholder { color: #6b5b4a !important; }
 
     .team-modal-buttons {
       display: flex;
@@ -241,25 +251,15 @@
       font-weight: bold;
     }
 
-    .team-cancel-btn {
-      background-color: #555;
-    }
-
-    .team-ok-btn {
-      background-color: #2e7d32;
-    }
-
-    .team-ok-btn:hover {
-      background-color: #3fa344;
-    }
+    .team-cancel-btn { background-color: #555; }
+    .team-ok-btn { background-color: #2e7d32; }
+    .team-ok-btn:hover { background-color: #3fa344; }
   </style>
 </head>
 
 <body>
-
   <div class="form-wrapper" autocomplete="off">
     <div>
-
       <div class="logo">
         <div class="logo-left">
           <div class="main">Le Magazynier</div>
@@ -267,19 +267,23 @@
         </div>
       </div>
 
-      <!-- LOGOWANIE -->
       <div id="login-section">
         <input type="password" id="kod" placeholder="Kod pracownika" required autocomplete="off">
         <button id="loginBtn" onclick="checkLogin()" style="width:100%;">Zaloguj</button>
       </div>
 
-      <!-- MENU PO ZALOGOWANIU -->
       <div id="form-section" class="hidden">
         <p>Witaj, <strong id="user-name"></strong>!</p>
 
+        <div id="sessionCard" class="session-card hidden">
+          <div class="session-title">AKTYWNA SESJA AUTA</div>
+          <div id="sessionSummary" class="session-summary"></div>
+          <button class="session-end-btn" onclick="endTransportSession()">Zakończ sesję auta</button>
+        </div>
+
         <div id="main-menu" class="main-menu">
-          <button onclick="showRouteForm('pz.html')">Przyjęcie moduły</button>
-          <button onclick="showRouteForm('wz.html')">Wydanie moduły</button>
+          <button onclick="openTransportOperation('pz.html')">Przyjęcie moduły</button>
+          <button onclick="openTransportOperation('wz.html')">Wydanie moduły</button>
           <button onclick="openCzesciTeamModal()">Serwisy części</button>
         </div>
 
@@ -288,8 +292,7 @@
         <div id="inventoryWrap" class="inventory-wrap">
           <button class="inventory-btn" onclick="window.location.replace('inwentaryzacja.html?v=' + Date.now())">Inwentaryzacja</button>
         </div>
-        
-        <!-- FORMULARZ TRASY DLA PZ/WZ -->
+
         <div id="route-form" class="hidden">
           <input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
           <input type="text" id="przewoznik" class="uppercase" placeholder="NAZWA FIRMY PRZEWOŹNIKA" required autocomplete="off">
@@ -309,20 +312,11 @@
     </div>
   </div>
 
-  <!-- OKNO EKIPY DLA SERWISÓW CZĘŚCI -->
   <div id="teamModal" class="team-modal">
     <div class="team-modal-box">
       <div class="team-modal-title">Serwisy części</div>
       <div class="team-modal-subtitle">Wpisz nazwę ekipy / trasy</div>
-
-      <input
-        type="text"
-        id="teamModalInput"
-        class="team-modal-input"
-        placeholder="EKIPA / TRASA"
-        autocomplete="off"
-      >
-
+      <input type="text" id="teamModalInput" class="team-modal-input" placeholder="EKIPA / TRASA" autocomplete="off">
       <div class="team-modal-buttons">
         <button class="team-cancel-btn" onclick="closeCzesciTeamModal()">Anuluj</button>
         <button class="team-ok-btn" onclick="confirmCzesciTeam()">OK</button>
@@ -330,209 +324,235 @@
     </div>
   </div>
 
-  <script>
-    const users = {
-      "2102": "Jarosław J. ",
-      "2009": "Krystian M. ",
-    };
+<script>
+  const users = {
+    "2102": "Jarosław J. ",
+    "2009": "Krystian M. ",
+  };
 
-    let selectedDestination = "";
+  let selectedDestination = "";
 
-    function checkLogin() {
-      const kod = document.getElementById("kod").value.trim();
-      const login = users[kod];
+  function checkLogin() {
+    const kod = document.getElementById("kod").value.trim();
+    const login = users[kod];
 
-      if (!login) {
-        alert("Niepoprawny kod pracownika.");
-        return;
-      }
+    if (!login) {
+      alert("Niepoprawny kod pracownika.");
+      return;
+    }
 
-      localStorage.setItem("login", login);
+    localStorage.setItem("login", login);
+    document.getElementById("user-name").textContent = login;
+    document.getElementById("form-section").classList.remove("hidden");
+    document.getElementById("login-section").classList.add("hidden");
+    showMenu();
+  }
 
+  function hasActiveTransportSession() {
+    return !!(
+      getTransportSessionId() &&
+      localStorage.getItem("trasa") &&
+      localStorage.getItem("przewoznik") &&
+      localStorage.getItem("tablica")
+    );
+  }
+
+  function updateSessionCard() {
+    const card = document.getElementById("sessionCard");
+    const summary = document.getElementById("sessionSummary");
+    if (!card || !summary) return;
+
+    if (!hasActiveTransportSession()) {
+      card.classList.add("hidden");
+      summary.textContent = "";
+      return;
+    }
+
+    const trasa = localStorage.getItem("trasa") || "";
+    const przewoznik = localStorage.getItem("przewoznik") || "";
+    const tablica = localStorage.getItem("tablica") || "";
+    summary.textContent = `${trasa} • ${przewoznik} • ${tablica}`;
+    card.classList.remove("hidden");
+  }
+
+  function showMenu() {
+    selectedDestination = "";
+    document.getElementById("main-menu").classList.remove("hidden");
+    document.getElementById("route-form").classList.add("hidden");
+    document.getElementById("logoutBtn").classList.remove("hidden");
+
+    const inventoryWrap = document.getElementById("inventoryWrap");
+    if (inventoryWrap) inventoryWrap.classList.remove("hidden");
+
+    updateSessionCard();
+  }
+
+  function openTransportOperation(destination) {
+    if (hasActiveTransportSession()) {
+      goToDestination(destination);
+      return;
+    }
+
+    showRouteForm(destination);
+  }
+
+  function showRouteForm(destination) {
+    selectedDestination = destination;
+    document.getElementById("main-menu").classList.add("hidden");
+    document.getElementById("route-form").classList.remove("hidden");
+    document.getElementById("logoutBtn").classList.add("hidden");
+
+    const inventoryWrap = document.getElementById("inventoryWrap");
+    if (inventoryWrap) inventoryWrap.classList.add("hidden");
+  }
+
+  function goToDestination(destination) {
+    const trasa = localStorage.getItem("trasa") || "";
+    const przewoznik = localStorage.getItem("przewoznik") || "";
+    const tablica = localStorage.getItem("tablica") || "";
+
+    if (!trasa || !przewoznik || !tablica) {
+      clearTransportSessionId();
+      showRouteForm(destination);
+      return;
+    }
+
+    const url = `${destination}?trasa=${encodeURIComponent(trasa)}&przewoznik=${encodeURIComponent(przewoznik)}&tablica=${encodeURIComponent(tablica)}&v=${Date.now()}`;
+    window.location.replace(url);
+  }
+
+  function backToMenu() {
+    showMenu();
+  }
+
+  function goToSelected() {
+    if (!selectedDestination) {
+      alert("Nie wybrano operacji.");
+      return;
+    }
+
+    const trasa = document.getElementById("trasa").value.trim().toUpperCase();
+    const przewoznik = document.getElementById("przewoznik").value.trim().toUpperCase();
+    const tablicaSam = document.getElementById("tablicaSam").value.trim().toUpperCase();
+    const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
+
+    if (!trasa || !przewoznik || !tablicaSam || !tablicaNacz) {
+      alert("Proszę uzupełnić wszystkie pola.");
+      return;
+    }
+
+    const tablicaCombined = `${tablicaSam} / ${tablicaNacz}`;
+    localStorage.setItem("trasa", trasa);
+    localStorage.setItem("przewoznik", przewoznik);
+    localStorage.setItem("tablica", tablicaCombined);
+    localStorage.setItem("tablicaSam", tablicaSam);
+    localStorage.setItem("tablicaNacz", tablicaNacz);
+    ensureTransportSessionId();
+    goToDestination(selectedDestination);
+  }
+
+  function hasSavedArray(key) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(parsed) && parsed.length > 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function endTransportSession() {
+    const hasUnsent =
+      hasSavedArray("codesPZ") ||
+      hasSavedArray("partsPZTest") ||
+      hasSavedArray("codesWZ") ||
+      hasSavedArray("partsWZ");
+
+    const message = hasUnsent
+      ? "Masz niewysłane dane PZ lub WZ. Zakończenie sesji usunie te niewysłane dane. Czy na pewno zakończyć sesję?"
+      : "Czy na pewno zakończyć sesję tego auta?";
+
+    if (!window.confirm(message)) return;
+
+    localStorage.removeItem("codesPZ");
+    localStorage.removeItem("partsPZTest");
+    localStorage.removeItem("codesWZ");
+    localStorage.removeItem("partsWZ");
+    localStorage.removeItem("trasa");
+    localStorage.removeItem("przewoznik");
+    localStorage.removeItem("tablica");
+    localStorage.removeItem("tablicaSam");
+    localStorage.removeItem("tablicaNacz");
+    clearTransportSessionId();
+
+    document.getElementById("trasa").value = "";
+    document.getElementById("przewoznik").value = "";
+    document.getElementById("tablicaSam").value = "";
+    document.getElementById("tablicaNacz").value = "";
+    showMenu();
+  }
+
+  function openCzesciTeamModal() {
+    const modal = document.getElementById("teamModal");
+    const input = document.getElementById("teamModalInput");
+    const saved = localStorage.getItem("serwisEkipa") || "";
+    input.value = saved;
+    modal.style.display = "flex";
+    setTimeout(() => input.focus(), 100);
+  }
+
+  function closeCzesciTeamModal() {
+    const modal = document.getElementById("teamModal");
+    const input = document.getElementById("teamModalInput");
+    input.value = "";
+    modal.style.display = "none";
+  }
+
+  function confirmCzesciTeam() {
+    const input = document.getElementById("teamModalInput");
+    const cleanEkipa = input.value.trim().toUpperCase();
+
+    if (!cleanEkipa) {
+      alert("Musisz wpisać nazwę ekipy / trasy.");
+      return;
+    }
+
+    localStorage.setItem("serwisEkipa", cleanEkipa);
+    window.location.replace("czesci.html?v=" + Date.now());
+  }
+
+  function logout() {
+    localStorage.removeItem("login");
+    localStorage.removeItem("serwisEkipa");
+
+    document.getElementById("form-section").classList.add("hidden");
+    document.getElementById("login-section").classList.remove("hidden");
+    document.getElementById("kod").value = "";
+    closeCzesciTeamModal();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    sessionStorage.removeItem("clearInputsAfterSend");
+
+    const login = localStorage.getItem("login");
+    if (login) {
       document.getElementById("user-name").textContent = login;
       document.getElementById("form-section").classList.remove("hidden");
       document.getElementById("login-section").classList.add("hidden");
-
       showMenu();
     }
 
-    function showMenu() {
-      selectedDestination = "";
-      document.getElementById("main-menu").classList.remove("hidden");
-      document.getElementById("route-form").classList.add("hidden");
-      document.getElementById("logoutBtn").classList.remove("hidden");
+    const teamInput = document.getElementById("teamModalInput");
+    if (teamInput) {
+      teamInput.addEventListener("input", () => {
+        teamInput.value = teamInput.value.toUpperCase();
+      });
 
-      const inventoryWrap = document.getElementById("inventoryWrap");
-      if (inventoryWrap) inventoryWrap.classList.remove("hidden");
+      teamInput.addEventListener("keydown", e => {
+        if (e.key === "Enter") confirmCzesciTeam();
+        if (e.key === "Escape") closeCzesciTeamModal();
+      });
     }
-
-    function showRouteForm(destination) {
-      selectedDestination = destination;
-
-      document.getElementById("main-menu").classList.add("hidden");
-      document.getElementById("route-form").classList.remove("hidden");
-      document.getElementById("logoutBtn").classList.add("hidden");
-
-      const inventoryWrap = document.getElementById("inventoryWrap");
-      if (inventoryWrap) inventoryWrap.classList.add("hidden");
-
-      const trasa = localStorage.getItem("trasa");
-      const przewoznik = localStorage.getItem("przewoznik");
-      const tablicaSam = localStorage.getItem("tablicaSam");
-      const tablicaNacz = localStorage.getItem("tablicaNacz");
-
-      if (trasa) document.getElementById("trasa").value = trasa;
-      if (przewoznik) document.getElementById("przewoznik").value = przewoznik;
-      if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
-      if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
-    }
-
-    function openCzesciTeamModal() {
-      const modal = document.getElementById("teamModal");
-      const input = document.getElementById("teamModalInput");
-      const saved = localStorage.getItem("serwisEkipa") || "";
-
-      input.value = saved;
-      modal.style.display = "flex";
-
-      setTimeout(() => {
-        input.focus();
-      }, 100);
-    }
-
-    function closeCzesciTeamModal() {
-      const modal = document.getElementById("teamModal");
-      const input = document.getElementById("teamModalInput");
-
-      input.value = "";
-      modal.style.display = "none";
-    }
-
-    function confirmCzesciTeam() {
-      const input = document.getElementById("teamModalInput");
-      const cleanEkipa = input.value.trim().toUpperCase();
-
-      if (!cleanEkipa) {
-        alert("Musisz wpisać nazwę ekipy / trasy.");
-        return;
-      }
-
-      localStorage.setItem("serwisEkipa", cleanEkipa);
-      window.location.replace("czesci.html?v=" + Date.now());
-    }
-
-    function backToMenu() {
-      showMenu();
-    }
-
-    function goToSelected() {
-      if (!selectedDestination) {
-        alert("Nie wybrano operacji.");
-        return;
-      }
-
-      const trasa = document.getElementById("trasa").value.trim().toUpperCase();
-      const przewoznik = document.getElementById("przewoznik").value.trim().toUpperCase();
-      const tablicaSam = document.getElementById("tablicaSam").value.trim().toUpperCase();
-      const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
-
-      if (!trasa || !przewoznik || !tablicaSam || !tablicaNacz) {
-        alert("Proszę uzupełnić wszystkie pola.");
-        return;
-      }
-
-      const tablicaCombined = `${tablicaSam} / ${tablicaNacz}`;
-
-      localStorage.setItem("trasa", trasa);
-      localStorage.setItem("przewoznik", przewoznik);
-      localStorage.setItem("tablica", tablicaCombined);
-      localStorage.setItem("tablicaSam", tablicaSam);
-      localStorage.setItem("tablicaNacz", tablicaNacz);
-
-      const url = `${selectedDestination}?trasa=${encodeURIComponent(trasa)}&przewoznik=${encodeURIComponent(przewoznik)}&tablica=${encodeURIComponent(tablicaCombined)}&v=${Date.now()}`;
-
-      window.location.replace(url);
-    }
-
-    function logout() {
-      localStorage.removeItem("login");
-      localStorage.removeItem("trasa");
-      localStorage.removeItem("przewoznik");
-      localStorage.removeItem("tablica");
-      localStorage.removeItem("tablicaSam");
-      localStorage.removeItem("tablicaNacz");
-      localStorage.removeItem("serwisEkipa");
-
-      document.getElementById("form-section").classList.add("hidden");
-      document.getElementById("login-section").classList.remove("hidden");
-      document.getElementById("kod").value = "";
-
-      closeCzesciTeamModal();
-      showMenu();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      if (sessionStorage.getItem("clearInputsAfterSend") === "1") {
-        sessionStorage.removeItem("clearInputsAfterSend");
-
-        localStorage.removeItem("trasa");
-        localStorage.removeItem("przewoznik");
-        localStorage.removeItem("tablica");
-        localStorage.removeItem("tablicaSam");
-        localStorage.removeItem("tablicaNacz");
-
-        const trasaEl = document.getElementById("trasa");
-        const przewEl = document.getElementById("przewoznik");
-        const tabSamEl = document.getElementById("tablicaSam");
-        const tabNacEl = document.getElementById("tablicaNacz");
-
-        if (trasaEl) trasaEl.value = "";
-        if (przewEl) przewEl.value = "";
-        if (tabSamEl) tabSamEl.value = "";
-        if (tabNacEl) tabNacEl.value = "";
-      }
-
-      const login = localStorage.getItem("login");
-
-      if (login) {
-        document.getElementById("user-name").textContent = login;
-        document.getElementById("form-section").classList.remove("hidden");
-        document.getElementById("login-section").classList.add("hidden");
-        showMenu();
-      }
-
-      const teamInput = document.getElementById("teamModalInput");
-      if (teamInput) {
-        teamInput.addEventListener("input", () => {
-          teamInput.value = teamInput.value.toUpperCase();
-        });
-
-        teamInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            confirmCzesciTeam();
-          }
-
-          if (e.key === "Escape") {
-            closeCzesciTeamModal();
-          }
-        });
-      }
-    });
-
-    window.addEventListener("pageshow", (ev) => {
-      if (ev.persisted) {
-        const trasaEl = document.getElementById("trasa");
-        const przewEl = document.getElementById("przewoznik");
-        const tabSamEl = document.getElementById("tablicaSam");
-        const tabNacEl = document.getElementById("tablicaNacz");
-
-        if (trasaEl) trasaEl.value = "";
-        if (przewEl) przewEl.value = "";
-        if (tabSamEl) tabSamEl.value = "";
-        if (tabNacEl) tabNacEl.value = "";
-      }
-    });
-  </script>
-
+  });
+</script>
 </body>
 </html>
