@@ -483,6 +483,34 @@ function setupServiceLabels() {
   }
 }
 
+function setupMainSessionSpacing() {
+  const sessionCard = document.getElementById("sessionCard");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const inventoryWrap = document.getElementById("inventoryWrap");
+
+  if (!sessionCard || !logoutBtn || !inventoryWrap) return;
+
+  const applySpacing = () => {
+    const active = !sessionCard.classList.contains("hidden");
+
+    if (active) {
+      logoutBtn.style.margin = "30px auto 0 auto";
+      inventoryWrap.style.marginTop = "20px";
+    } else {
+      logoutBtn.style.margin = "";
+      inventoryWrap.style.marginTop = "";
+    }
+  };
+
+  applySpacing();
+
+  const observer = new MutationObserver(applySpacing);
+  observer.observe(sessionCard, {
+    attributes: true,
+    attributeFilter: ["class"]
+  });
+}
+
 restoreTransportSessionData();
 installTransportApiGuard();
 
@@ -492,4 +520,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTransportDraftScreen();
   installMainSessionFinishHandler();
   setupServiceLabels();
+  setupMainSessionSpacing();
 });
