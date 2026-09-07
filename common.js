@@ -475,6 +475,19 @@ function installMainSessionFinishHandler() {
   window.endTransportSession = finishTransportSession;
 }
 
+function setupServiceLabels() {
+  document.querySelectorAll("button").forEach(button => {
+    if (button.textContent.trim() === "Serwisy części") {
+      button.textContent = "Serwisy";
+    }
+  });
+
+  const modalTitle = document.querySelector(".team-modal-title");
+  if (modalTitle && modalTitle.textContent.trim() === "Serwisy części") {
+    modalTitle.textContent = "Serwisy";
+  }
+}
+
 restoreTransportSessionData();
 installTransportApiGuard();
 
@@ -483,4 +496,5 @@ document.addEventListener("DOMContentLoaded", () => {
   resetSubmissionIdIfNoDraft(getTransportOperation());
   setupTransportDraftScreen();
   installMainSessionFinishHandler();
+  setupServiceLabels();
 });
