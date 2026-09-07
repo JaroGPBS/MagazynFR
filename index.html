@@ -192,40 +192,46 @@
       margin-top: 20px;
     }
 
-    .team-modal {
+    .team-modal,
+    .app-dialog {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0,0,0,0.78);
       z-index: 9999;
       align-items: center;
       justify-content: center;
       padding: 18px;
     }
 
-    .team-modal-box {
+    .team-modal-box,
+    .app-dialog-box {
       width: 100%;
       max-width: 380px;
       background: #333;
       border: 1px solid #666;
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 20px;
       color: white;
-      box-shadow: 0 0 18px rgba(0,0,0,0.45);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
     }
 
-    .team-modal-title {
+    .team-modal-title,
+    .app-dialog-title {
       font-size: 1.15rem;
       font-weight: bold;
       text-align: center;
       margin-bottom: 12px;
     }
 
-    .team-modal-subtitle {
-      font-size: 0.85rem;
+    .team-modal-subtitle,
+    .app-dialog-message {
+      font-size: 0.9rem;
       color: #ddd;
       text-align: center;
-      margin-bottom: 12px;
+      line-height: 1.4;
+      white-space: pre-line;
+      margin-bottom: 16px;
     }
 
     .team-modal-input {
@@ -239,21 +245,29 @@
 
     .team-modal-input::placeholder { color: #6b5b4a !important; }
 
-    .team-modal-buttons {
+    .team-modal-buttons,
+    .app-dialog-buttons {
       display: flex;
       gap: 10px;
       margin-top: 8px;
     }
 
-    .team-modal-buttons button {
+    .team-modal-buttons button,
+    .app-dialog-buttons button {
       flex: 1;
       height: 46px;
       font-weight: bold;
+      border-radius: 10px;
     }
 
-    .team-cancel-btn { background-color: #555; }
-    .team-ok-btn { background-color: #2e7d32; }
-    .team-ok-btn:hover { background-color: #3fa344; }
+    .team-cancel-btn,
+    .app-dialog-cancel { background-color: #555; }
+
+    .team-ok-btn,
+    .app-dialog-ok { background-color: #2e7d32; }
+
+    .team-ok-btn:hover,
+    .app-dialog-ok:hover { background-color: #3fa344; }
   </style>
 </head>
 
@@ -324,6 +338,17 @@
     </div>
   </div>
 
+  <div id="appDialog" class="app-dialog">
+    <div class="app-dialog-box">
+      <div id="appDialogTitle" class="app-dialog-title"></div>
+      <div id="appDialogMessage" class="app-dialog-message"></div>
+      <div class="app-dialog-buttons">
+        <button id="appDialogCancel" class="app-dialog-cancel" type="button">Anuluj</button>
+        <button id="appDialogOk" class="app-dialog-ok" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
 <script>
   const users = {
     "2102": "Jarosław J. ",
@@ -331,13 +356,54 @@
   };
 
   let selectedDestination = "";
+  let appDialogResolver = null;
+
+  function showAppDialog({ title = "", message = "", okText = "OK", cancelText = "Anuluj", showCancel = false }) {
+    return new Promise(resolve => {
+      const overlay = document.getElementById("appDialog");
+      const titleEl = document.getElementById("appDialogTitle");
+      const messageEl = document.getElementById("appDialogMessage");
+      const okBtn = document.getElementById("appDialogOk");
+      const cancelBtn = document.getElementById("appDialogCancel");
+
+      appDialogResolver = resolve;
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      messageEl.style.display = message ? "block" : "none";
+      okBtn.textContent = okText;
+      cancelBtn.textContent = cancelText;
+      cancelBtn.style.display = showCancel ? "block" : "none";
+
+      const close = value => {
+        overlay.style.display = "none";
+        if (appDialogResolver) {
+          const resolver = appDialogResolver;
+          appDialogResolver = null;
+          resolver(value);
+        }
+      };
+
+      okBtn.onclick = () => close(true);
+      cancelBtn.onclick = () => close(false);
+      overlay.style.display = "flex";
+      setTimeout(() => okBtn.focus(), 50);
+    });
+  }
+
+  function appAlert(message, title = "Komunikat", okText = "OK") {
+    return showAppDialog({ title, message, okText, showCancel: false });
+  }
+
+  function appConfirm(message, title = "Potwierdzenie", okText = "OK", cancelText = "Anuluj") {
+    return showAppDialog({ title, message, okText, cancelText, showCancel: true });
+  }
 
   function checkLogin() {
     const kod = document.getElementById("kod").value.trim();
     const login = users[kod];
 
     if (!login) {
-      alert("Niepoprawny kod pracownika.");
+      appAlert("Niepoprawny kod pracownika.", "Błąd");
       return;
     }
 
@@ -427,7 +493,7 @@
 
   function goToSelected() {
     if (!selectedDestination) {
-      alert("Nie wybrano operacji.");
+      appAlert("Nie wybrano operacji.", "Brak operacji");
       return;
     }
 
@@ -437,7 +503,7 @@
     const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
 
     if (!trasa || !przewoznik || !tablicaSam || !tablicaNacz) {
-      alert("Proszę uzupełnić wszystkie pola.");
+      appAlert("Proszę uzupełnić wszystkie pola.", "Brak danych");
       return;
     }
 
@@ -460,7 +526,7 @@
     }
   }
 
-  function endTransportSession() {
+  async function endTransportSession() {
     const hasUnsent =
       hasSavedArray("codesPZ") ||
       hasSavedArray("partsPZTest") ||
@@ -468,10 +534,11 @@
       hasSavedArray("partsWZ");
 
     const message = hasUnsent
-      ? "Masz niewysłane dane PZ lub WZ. Zakończenie sesji usunie te niewysłane dane. Czy na pewno zakończyć sesję?"
-      : "Czy na pewno zakończyć sesję tego auta?";
+      ? "Masz niewysłane dane PZ lub WZ. Zakończenie sesji usunie te niewysłane dane."
+      : "Zakończyć sesję tego auta?";
 
-    if (!window.confirm(message)) return;
+    const ok = await appConfirm(message, "Zakończyć sesję?", "Zakończ", "Anuluj");
+    if (!ok) return;
 
     localStorage.removeItem("codesPZ");
     localStorage.removeItem("partsPZTest");
@@ -489,6 +556,73 @@
     document.getElementById("tablicaSam").value = "";
     document.getElementById("tablicaNacz").value = "";
     showMenu();
+  }
+
+  async function finishTransportSessionPretty() {
+    if (!getTransportSessionId()) return;
+
+    const hasPz = hasTransportDraft("pz");
+    const hasWz = hasTransportDraft("wz");
+    const hasData = hasPz || hasWz;
+
+    const confirmed = await appConfirm(
+      "",
+      hasData ? "Zakończyć i wysłać?" : "Zakończyć sesję?",
+      hasData ? "Wyślij" : "Zakończ",
+      "Anuluj"
+    );
+
+    if (!confirmed) return;
+
+    const button = document.querySelector(".session-end-btn");
+    const oldText = button ? button.textContent : "";
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = hasData ? "Wysyłam..." : "Kończę...";
+    }
+
+    try {
+      let pzNumber = "";
+      let wzNumber = "";
+
+      if (hasPz) {
+        const pzResult = await sendTransportDraft_("pz");
+        if (pzResult) pzNumber = pzResult.documentNumber || "PZ";
+      }
+
+      if (hasWz) {
+        const wzResult = await sendTransportDraft_("wz");
+        if (wzResult) wzNumber = wzResult.documentNumber || "WZ";
+      }
+
+      clearFinishedTransportSession_();
+
+      if (wzNumber || pzNumber) {
+        const lines = [];
+        if (wzNumber) lines.push(`Zapisano ${wzNumber}`);
+        if (pzNumber) lines.push(`${wzNumber ? "         " : "Zapisano "}${pzNumber}`);
+        await appAlert(lines.join("\n"), "Dane wysłane.");
+      } else {
+        await appAlert("Sesja została zakończona.", "Gotowe");
+      }
+
+      const routeFields = ["trasa", "przewoznik", "tablicaSam", "tablicaNacz"];
+      routeFields.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = "";
+      });
+
+      showMenu();
+    } catch (err) {
+      const messageText = err && err.message ? err.message : String(err);
+      await appAlert(messageText + "\n\nNiewysłane dane pozostały zapisane.", "Nie udało się wysłać");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText || "Zakończ sesję";
+      }
+    }
   }
 
   function openCzesciTeamModal() {
@@ -512,7 +646,7 @@
     const cleanEkipa = input.value.trim().toUpperCase();
 
     if (!cleanEkipa) {
-      alert("Musisz wpisać nazwę ekipy / trasy.");
+      appAlert("Musisz wpisać nazwę ekipy / trasy.", "Brak ekipy");
       return;
     }
 
@@ -552,6 +686,8 @@
         if (e.key === "Escape") closeCzesciTeamModal();
       });
     }
+
+    window.endTransportSession = finishTransportSessionPretty;
   });
 </script>
 </body>
