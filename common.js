@@ -1,8 +1,9 @@
 // Wspólne funkcje aplikacji Le Magazynier.
-// Ten plik nie wysyła danych i nie zmienia stanu magazynowego.
+// Zawiera wspólną obsługę numerów S/N, sesji auta i identyfikatorów wysyłek.
 
 const TRANSPORT_SESSION_ID_KEY = "transportSessionId";
 const TRANSPORT_SESSION_DATA_KEY = "transportSessionData_v1";
+const SUBMISSION_ID_PREFIX = "pendingSubmissionId_";
 
 function cleanSN(value) {
   let val = String(value || "").toUpperCase().trim();
@@ -153,8 +154,106 @@ function clearTransportSessionId() {
   localStorage.removeItem(TRANSPORT_SESSION_DATA_KEY);
 }
 
+function getTransportOperation() {
+  const path = String(window.location.pathname || "").toLowerCase();
+  if (path.endsWith("/pz.html") || path.endsWith("pz.html")) return "pz";
+  if (path.endsWith("/wz.html") || path.endsWith("wz.html")) return "wz";
+  return "";
+}
+
+function createSubmissionId(operation) {
+  const sessionId = ensureTransportSessionId();
+  const now = Date.now();
+
+  let randomPart = "000000";
+  try {
+    const bytes = new Uint32Array(1);
+    crypto.getRandomValues(bytes);
+    randomPart = String(bytes[0] % 1000000).padStart(6, "0");
+  } catch (_) {
+    randomPart = String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
+  }
+
+  return `TX-${operation.toUpperCase()}-${sessionId}-${now}-${randomPart}`;
+}
+
+function getOrCreateSubmissionId(operation) {
+  if (!operation) return "";
+
+  const key = SUBMISSION_ID_PREFIX + operation;
+  let id = String(localStorage.getItem(key) || "").trim();
+
+  if (!id) {
+    id = createSubmissionId(operation);
+    localStorage.setItem(key, id);
+  }
+
+  return id;
+}
+
+function hasSavedArray(key) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch (_) {
+    return false;
+  }
+}
+
+function resetSubmissionIdIfNoDraft(operation) {
+  if (operation === "pz") {
+    if (!hasSavedArray("codesPZ") && !hasSavedArray("partsPZTest")) {
+      localStorage.removeItem(SUBMISSION_ID_PREFIX + "pz");
+    }
+  }
+
+  if (operation === "wz") {
+    if (!hasSavedArray("codesWZ") && !hasSavedArray("partsWZ")) {
+      localStorage.removeItem(SUBMISSION_ID_PREFIX + "wz");
+    }
+  }
+}
+
+function installTransportFetchMetadata() {
+  if (window.__transportFetchMetadataInstalled) return;
+  window.__transportFetchMetadataInstalled = true;
+
+  const nativeFetch = window.fetch.bind(window);
+
+  window.fetch = function(input, init) {
+    const operation = getTransportOperation();
+    const options = init || {};
+    const method = String(options.method || "GET").toUpperCase();
+    const body = options.body;
+
+    if (
+      operation &&
+      method === "POST" &&
+      typeof FormData !== "undefined" &&
+      body instanceof FormData
+    ) {
+      const sessionId = ensureTransportSessionId();
+      const submissionId = getOrCreateSubmissionId(operation);
+
+      if (sessionId && !body.has("sessionId")) {
+        body.append("sessionId", sessionId);
+      }
+
+      if (submissionId && !body.has("submissionId")) {
+        body.append("submissionId", submissionId);
+      }
+    }
+
+    return nativeFetch(input, init);
+  };
+}
+
 // Stare ekrany PZ/WZ po udanej wysyłce czyszczą pola trasy.
 // Przy aktywnej sesji odtwarzamy je automatycznie przed uruchomieniem strony.
+restoreTransportSessionData();
+installTransportFetchMetadata();
+
 document.addEventListener("DOMContentLoaded", () => {
   restoreTransportSessionData();
+  resetSubmissionIdIfNoDraft(getTransportOperation());
 });
