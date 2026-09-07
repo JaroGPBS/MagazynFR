@@ -287,11 +287,6 @@ function setupTransportDraftScreen() {
       localStorage.setItem(infoKey, infoInput.value);
     });
   }
-
-  const status = document.getElementById("status");
-  if (status && !status.textContent.trim()) {
-    status.textContent = "Dane zapisują się automatycznie. Wyślesz je przy zakończeniu sesji.";
-  }
 }
 
 function hasTransportDraft(operation) {
