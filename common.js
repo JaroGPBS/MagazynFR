@@ -1,5 +1,5 @@
 // Wspólne funkcje aplikacji Le Magazynier.
-// Zawiera wspólną obsługę numerów S/N, sesji auta i identyfikatorów wysyłek.
+// Obsługa numerów S/N, wspólnej sesji auta i bezpiecznych identyfikatorów wysyłek.
 
 const TRANSPORT_SESSION_ID_KEY = "transportSessionId";
 const TRANSPORT_SESSION_DATA_KEY = "transportSessionData_v1";
@@ -9,7 +9,6 @@ function cleanSN(value) {
   let val = String(value || "").toUpperCase().trim();
 
   // Kody QR mogą zawierać dodatkowe dane, np. "26/CQU123456789 MZ 234567".
-  // Do aplikacji trafia tylko właściwy numer S/N.
   val = val.replace(/\s+MZ(?:\s+.*)?$/i, "");
 
   // Usuń spację przed dwuliterową końcówką kraju, np. "... PL" -> "...PL".
@@ -22,8 +21,6 @@ function detectModuleType(value) {
   const sn = cleanSN(value);
   const body = sn.includes("/") ? sn.split("/").pop() : sn;
 
-  // Kolejność ma znaczenie: najpierw dłuższe prefiksy.
-  // Prefiksy konfliktowe CDD, CDI, LD i RD nie są przypisywane automatycznie.
   const rules = [
     ["LQBN", "LQB"],
     ["RQBN", "RQB"],
@@ -122,12 +119,10 @@ function restoreTransportSessionData() {
   const data = getTransportSessionData();
   if (!data || !data.id) return false;
 
-  // Nie nadpisuj świadomie rozpoczętej nowej sesji innym ID.
   const currentId = getTransportSessionId();
   if (currentId && currentId !== data.id) return false;
 
   localStorage.setItem(TRANSPORT_SESSION_ID_KEY, data.id);
-
   if (data.trasa) localStorage.setItem("trasa", data.trasa);
   if (data.przewoznik) localStorage.setItem("przewoznik", data.przewoznik);
   if (data.tablica) localStorage.setItem("tablica", data.tablica);
@@ -139,12 +134,12 @@ function restoreTransportSessionData() {
 
 function ensureTransportSessionId() {
   let id = getTransportSessionId();
+
   if (!id) {
     id = createTransportSessionId();
     localStorage.setItem(TRANSPORT_SESSION_ID_KEY, id);
   }
 
-  // Gdy dane auta są już wpisane, od razu zachowaj ich kopię dla całej sesji.
   saveTransportSessionData();
   return id;
 }
@@ -152,6 +147,8 @@ function ensureTransportSessionId() {
 function clearTransportSessionId() {
   localStorage.removeItem(TRANSPORT_SESSION_ID_KEY);
   localStorage.removeItem(TRANSPORT_SESSION_DATA_KEY);
+  localStorage.removeItem(SUBMISSION_ID_PREFIX + "pz");
+  localStorage.removeItem(SUBMISSION_ID_PREFIX + "wz");
 }
 
 function getTransportOperation() {
@@ -214,44 +211,56 @@ function resetSubmissionIdIfNoDraft(operation) {
   }
 }
 
-function installTransportFetchMetadata() {
-  if (window.__transportFetchMetadataInstalled) return;
-  window.__transportFetchMetadataInstalled = true;
+// PZ/WZ korzystają jeszcze ze zwykłego fetch(). Ten wspólny adapter dodaje metadane
+// tylko do ich wysyłek i nie pozwala wyczyścić danych, jeśli serwer nie potwierdzi zapisu.
+function installTransportApiGuard() {
+  if (window.__transportApiGuardInstalled) return;
+  window.__transportApiGuardInstalled = true;
 
   const nativeFetch = window.fetch.bind(window);
 
-  window.fetch = function(input, init) {
-    const operation = getTransportOperation();
+  window.fetch = async function(input, init) {
     const options = init || {};
     const method = String(options.method || "GET").toUpperCase();
     const body = options.body;
 
-    if (
-      operation &&
-      method === "POST" &&
-      typeof FormData !== "undefined" &&
-      body instanceof FormData
-    ) {
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+    const operation = isFormData ? String(body.get("strona") || "").toLowerCase() : "";
+    const isTransportPost = method === "POST" && (operation === "pz" || operation === "wz");
+
+    if (isTransportPost) {
       const sessionId = ensureTransportSessionId();
       const submissionId = getOrCreateSubmissionId(operation);
 
-      if (sessionId && !body.has("sessionId")) {
-        body.append("sessionId", sessionId);
+      if (sessionId && !body.has("sessionId")) body.append("sessionId", sessionId);
+      if (submissionId && !body.has("submissionId")) body.append("submissionId", submissionId);
+    }
+
+    const response = await nativeFetch(input, init);
+
+    if (isTransportPost) {
+      let result;
+
+      try {
+        result = JSON.parse(await response.clone().text());
+      } catch (_) {
+        throw new Error("Serwer nie potwierdził poprawnego zapisu. Dane pozostają w aplikacji.");
       }
 
-      if (submissionId && !body.has("submissionId")) {
-        body.append("submissionId", submissionId);
+      if (!response.ok || !result || result.ok !== true) {
+        const message = result && result.error
+          ? result.error
+          : "Nie udało się potwierdzić zapisu. Dane pozostają w aplikacji.";
+        throw new Error(message);
       }
     }
 
-    return nativeFetch(input, init);
+    return response;
   };
 }
 
-// Stare ekrany PZ/WZ po udanej wysyłce czyszczą pola trasy.
-// Przy aktywnej sesji odtwarzamy je automatycznie przed uruchomieniem strony.
 restoreTransportSessionData();
-installTransportFetchMetadata();
+installTransportApiGuard();
 
 document.addEventListener("DOMContentLoaded", () => {
   restoreTransportSessionData();
