@@ -424,23 +424,31 @@ async function finishTransportSession() {
   }
 
   try {
-    const results = [];
+    let pzNumber = "";
+    let wzNumber = "";
 
     if (hasPz) {
       const pzResult = await sendTransportDraft_("pz");
-      if (pzResult) results.push(pzResult.documentNumber || "PZ");
+      if (pzResult) pzNumber = pzResult.documentNumber || "PZ";
     }
 
     if (hasWz) {
       const wzResult = await sendTransportDraft_("wz");
-      if (wzResult) results.push(wzResult.documentNumber || "WZ");
+      if (wzResult) wzNumber = wzResult.documentNumber || "WZ";
     }
 
     clearFinishedTransportSession_();
 
-    const info = results.length
-      ? `Sesja zakończona. Zapisano: ${results.join(" i ")}.`
-      : "Sesja zakończona.";
+    let info = "Sesja zakończona.";
+
+    if (wzNumber || pzNumber) {
+      const lines = [];
+
+      if (wzNumber) lines.push(`Zapisano ${wzNumber}`);
+      if (pzNumber) lines.push(`${wzNumber ? "         " : "Zapisano "}${pzNumber}`);
+
+      info = `Dane wysłane.\n${lines.join("\n")}`;
+    }
 
     window.alert(info);
 
