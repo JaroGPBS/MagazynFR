@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Serwisy części – Le Magazynier</title>
+  <title>Serwisy – Le Magazynier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
@@ -281,8 +281,6 @@
       border-color: #aa3333;
     }
 
-
-
     .app-dialog-overlay {
       display: none;
       position: fixed;
@@ -346,7 +344,6 @@
       background: #aa3333 !important;
     }
 
-
     .status {
       font-size: 0.95rem;
       color: #ffdddd;
@@ -359,7 +356,7 @@
   <div class="form-wrapper">
     <div>
       <div class="header-row">
-        <div class="logo">Serwisy części</div>
+        <div class="logo">Serwisy</div>
         <button class="back-button" onclick="goBack()">← Cofnij</button>
       </div>
 
@@ -405,7 +402,6 @@
     </div>
   </div>
 
-  <!-- ŁADOWANIE BAZY -->
   <div id="loadingOverlay" class="overlay" style="display:none;">
     <div class="overlay-box">
       ⏳ Aktualizuję bazę części...<br>
@@ -413,7 +409,6 @@
     </div>
   </div>
 
-  <!-- WYSYŁANIE -->
   <div id="sendingOverlay" class="overlay">
     <div class="overlay-box">
       ⏳ Wysyłanie danych...<br>
@@ -421,7 +416,6 @@
     </div>
   </div>
 
-  <!-- WYBÓR PRZYJĘCIE / WYDANIE -->
   <div id="partModal" class="overlay">
     <div class="overlay-box">
       <div class="modal-title">Wybierz operację</div>
@@ -438,9 +432,6 @@
     </div>
   </div>
 
-
-
-  <!-- OKIENKO APLIKACJI -->
   <div id="appDialog" class="app-dialog-overlay">
     <div class="app-dialog-box">
       <div id="appDialogTitle" class="app-dialog-title"></div>
@@ -449,7 +440,6 @@
     </div>
   </div>
   <script>
-
     function showAppDialog(title, message, buttons) {
       const overlay = document.getElementById("appDialog");
       const titleEl = document.getElementById("appDialogTitle");
@@ -682,7 +672,7 @@
           enablePage();
           setBaseStatus("Baza z dnia: " + formatBaseDate(now), false);
         })
-        .catch(err => {
+        .catch(() => {
           if (bazaCzesci.length === 0) disablePartsControls();
           setBaseStatus("BŁĄD AKTUALIZACJI", true);
         });
@@ -832,7 +822,7 @@
       const ekipaTrasa = String(localStorage.getItem("serwisEkipa") || "").trim().toUpperCase();
 
       if (!ekipaTrasa) {
-        await showAppAlert("Brak ekipy", "Brak nazwy ekipy.\nWróć na stronę główną i wejdź ponownie przez Serwisy części.");
+        await showAppAlert("Brak ekipy", "Brak nazwy ekipy.\nWróć na stronę główną i wejdź ponownie przez Serwisy.");
         return;
       }
 
@@ -853,7 +843,7 @@
 
       fetch(scriptURL, { method: "POST", body: formData })
         .then(res => res.text())
-        .then(async txt => {
+        .then(async () => {
           await showAppAlert("Gotowe", "✅ Części wysłane.");
           listaCzesci = [];
           localStorage.removeItem("serwisyCzesciLista");
