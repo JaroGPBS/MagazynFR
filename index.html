@@ -534,23 +534,5 @@
     });
   </script>
 
-  <script src="autoLogout.js"></script>
-
-  <script>
-    function reloadAtMidnight() {
-      const now = new Date();
-      const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0);
-
-      const timeToMidnight = midnight - now;
-
-      setTimeout(() => {
-        window.location.reload(true);
-      }, timeToMidnight);
-    }
-
-    reloadAtMidnight();
-  </script>
-
 </body>
 </html>
