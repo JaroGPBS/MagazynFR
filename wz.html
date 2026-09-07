@@ -5,6 +5,8 @@
   <title>Wydanie – Le Magazynier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="common.js"></script>
+  <script src="moduleScanner.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
   <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
 
@@ -56,9 +58,7 @@
       text-align: center;
     }
 
-    .back-button:hover {
-      background-color: #777;
-    }
+    .back-button:hover { background-color: #777; }
 
     .data-display {
       font-size: 0.9rem;
@@ -82,9 +82,7 @@
       color: #f5f5f5;
     }
 
-    input::placeholder {
-      color: #999;
-    }
+    input::placeholder { color: #999; }
 
     button {
       cursor: pointer;
@@ -93,9 +91,7 @@
       font-weight: bold;
     }
 
-    button:hover {
-      background-color: #777;
-    }
+    button:hover { background-color: #777; }
 
     button:disabled {
       opacity: 0.45;
@@ -185,6 +181,36 @@
       color: #ffffff;
     }
 
+    .scan-mode-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 2px 0 8px;
+    }
+
+    .scan-mode-btn {
+      height: 38px;
+      margin: 0;
+      padding: 0 8px;
+      font-size: 0.85rem;
+      background: #444;
+      border: 1px solid #666;
+      border-radius: 8px;
+    }
+
+    .scan-mode-btn.active {
+      background: #2e7d32;
+      border-color: #4cae50;
+    }
+
+    .stop-scan-btn {
+      display: none;
+      background: #8a3333;
+      height: 42px;
+      margin: 6px 0 10px;
+      border-radius: 10px;
+    }
+
     .search-results {
       margin: 8px 0 14px;
       border: 1px solid #555;
@@ -200,34 +226,29 @@
       cursor: pointer;
     }
 
-    .result-item:last-child {
-      border-bottom: none;
-    }
-
-    .result-item:hover {
-      background: #444;
-    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item:hover { background: #444; }
 
     .part-name {
-  flex: 1;
-  font-size: 0.85rem;
-  word-break: normal;
-  overflow-wrap: break-word;
-  line-height: 1.2;
-}
+      flex: 1;
+      font-size: 0.85rem;
+      word-break: normal;
+      overflow-wrap: break-word;
+      line-height: 1.2;
+    }
 
     .part-qty {
-  width: 50px;
-  min-width: 50px;
-  max-width: 50px;
-  text-align: center;
-  font-weight: bold;
-  font-size: 0.85rem;
-  padding: 4px 6px;
-  border-radius: 6px;
-  background: #1c1c1c;
-  border: 1px solid #555;
-}
+      width: 50px;
+      min-width: 50px;
+      max-width: 50px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: #1c1c1c;
+      border: 1px solid #555;
+    }
 
     .overlay {
       display: none;
@@ -274,15 +295,12 @@
       height: 46px;
     }
 
-    .ok-btn {
-      background-color: #2e7d32;
-    }
+    .ok-btn { background-color: #2e7d32; }
 
     .cancel-btn {
       background-color: #555;
       margin-top: 12px;
     }
-
 
     .base-status {
       width: 100%;
@@ -304,7 +322,6 @@
       font-weight: bold;
       border-color: #aa3333;
     }
-
 
     .module-table-header {
       display: grid;
@@ -329,21 +346,7 @@
       border-bottom: 1px solid #666;
     }
 
-    .module-row.nok-row {
-      border-color: #8a3333;
-    }
-
-    .module-row .note-input {
-      width: 100%;
-      min-width: 0;
-      height: 40px;
-      margin: 0;
-      padding: 6px 8px;
-      font-size: 0.92rem;
-      text-align: left;
-      border-radius: 7px;
-    }
-
+    .module-row .note-input,
     .module-row .code-text {
       width: 100%;
       min-width: 0;
@@ -352,8 +355,6 @@
       padding: 6px 8px;
       font-size: 0.92rem;
       border-radius: 7px;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .module-row .remove-btn {
@@ -365,20 +366,13 @@
       line-height: 1;
     }
 
-    input[list]::-webkit-calendar-picker-indicator {
-      display: none !important;
-      opacity: 0 !important;
-    }
-
+    input[list]::-webkit-calendar-picker-indicator,
     .module-row .note-input::-webkit-calendar-picker-indicator {
       display: none !important;
       opacity: 0 !important;
     }
 
-
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     .app-dialog {
       display: none;
@@ -432,14 +426,8 @@
       font-size: 0.95rem;
     }
 
-    .app-dialog-cancel {
-      background: #555;
-    }
-
-    .app-dialog-ok {
-      background: #2e7d32;
-    }
-
+    .app-dialog-cancel { background: #555; }
+    .app-dialog-ok { background: #2e7d32; }
   </style>
 </head>
 
@@ -453,105 +441,55 @@
 
       <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-      <!-- PRZYCISK MODUŁY -->
-      <button id="showModulesBtn" onclick="showModulesSection()" style="
-        width: 100%;
-        height: 48px;
-        font-size: 1rem;
-        font-weight: bold;
-        background-color: #555;
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        margin: 10px 0 8px;">
-        Moduły
-      </button>
+      <button id="showModulesBtn" onclick="showModulesSection()" style="width:100%;height:48px;font-size:1rem;font-weight:bold;background-color:#555;color:#fff;border:none;border-radius:12px;cursor:pointer;margin:10px 0 8px;">Moduły</button>
 
-      <!-- MODUŁY -->
       <div id="modulesSection" class="hidden">
         <div class="section-title">MODUŁY</div>
+        <button id="startScanModulBtn" onclick="startModuleScanning()" style="width:100%;height:50px;font-size:1rem;font-weight:bold;background-color:#2e7d32;color:#fff;border:none;border-radius:12px;cursor:pointer;margin:10px 0;">Skanuj moduł</button>
 
-        <button id="startScanModulBtn" onclick="startModuleScanning()" style="
-          width: 100%;
-          height: 50px;
-          font-size: 1rem;
-          font-weight: bold;
-          background-color: #2e7d32;
-          color: #fff;
-          border: none;
-          border-radius: 12px;
-          cursor: pointer;
-          margin: 10px 0;">
-          Skanuj moduł
-        </button>
+        <div class="scan-mode-row">
+          <button id="scanModeSingle" type="button" class="scan-mode-btn active" onclick="setModuleScanMode('single')">Pojedynczy</button>
+          <button id="scanModeSerial" type="button" class="scan-mode-btn" onclick="setModuleScanMode('serial')">Seryjny</button>
+        </div>
 
-        <div id="readerModul" style="display: none;"></div>
+        <div id="readerModul" style="display:none;"></div>
+        <button id="stopScanModulBtn" type="button" class="stop-scan-btn" onclick="stopModuleScanning()">Zakończ skanowanie</button>
 
-        <div style="display: flex; gap: 8px; margin: 10px 0;">
-          <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" oninput="formatManualSN(this)" style="flex: 1; padding: 4px; font-size: 1rem;">
-          <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
+        <div style="display:flex;gap:8px;margin:10px 0;">
+          <input type="text" id="manualInput" placeholder="Dodaj S/N ręcznie" autocomplete="off" oninput="formatManualSN(this)" style="flex:1;padding:4px;font-size:1rem;">
+          <button onclick="addManual()" style="width:20%;min-width:80px;font-size:0.8rem;padding:4px;">Dodaj S/N</button>
         </div>
 
         <div class="list-header">
-          <h3 style="margin:0; font-size:0.95rem;">Lista kodów</h3>
+          <h3 style="margin:0;font-size:0.95rem;">Lista kodów</h3>
           <span class="badge" id="codeCount">0</span>
         </div>
 
-        <div class="module-table-header">
-          <div>TYP</div>
-          <div>NUMER S/N</div>
-          <div></div>
-        </div>
-
+        <div class="module-table-header"><div>TYP</div><div>NUMER S/N</div><div></div></div>
         <ul id="codeList"></ul>
       </div>
 
-      <!-- PRZYCISK CZĘŚCI -->
-      <button id="showPartsBtn" onclick="showPartsSection()" style="
-        width: 100%;
-        height: 48px;
-        font-size: 1rem;
-        font-weight: bold;
-        background-color: #555;
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        margin: 18px 0 8px;">
-        Części
-      </button>
+      <button id="showPartsBtn" onclick="showPartsSection()" style="width:100%;height:48px;font-size:1rem;font-weight:bold;background-color:#555;color:#fff;border:none;border-radius:12px;cursor:pointer;margin:18px 0 8px;">Części</button>
 
-      <!-- CZĘŚCI -->
       <div id="partsSection" class="hidden">
         <div class="section-title">CZĘŚCI</div>
-
         <input type="text" id="searchInput" placeholder="Szukaj części po nazwie" autocomplete="off" disabled>
         <div id="searchResults" class="search-results"></div>
-
         <div class="list-header">
-          <h3 style="margin:0; font-size:0.95rem;">Lista części</h3>
+          <h3 style="margin:0;font-size:0.95rem;">Lista części</h3>
           <span class="badge" id="partCount">0</span>
         </div>
-
         <ul id="partList"></ul>
       </div>
 
       <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-
       <button onclick="sendData()">Wyślij dane</button>
 
-      <div id="partsBaseStatus" class="base-status" onclick="handleBaseStatusClick()">
-        Baza części: brak
-      </div>
-
+      <div id="partsBaseStatus" class="base-status" onclick="handleBaseStatusClick()">Baza części: brak</div>
       <p id="status"></p>
 
       <div id="sendingOverlay" class="overlay">
-        <div class="overlay-box">
-          ⏳ Wysyłanie danych...<br>
-          Proszę czekać.
-        </div>
+        <div class="overlay-box">⏳ Wysyłanie danych...<br>Proszę czekać.</div>
       </div>
     </div>
 
@@ -560,46 +498,32 @@
     </div>
   </div>
 
-  <!-- ŁADOWANIE BAZY CZĘŚCI -->
   <div id="loadingOverlay" class="overlay" style="display:none;">
-    <div class="overlay-box">
-      ⏳ Aktualizuję bazę części...<br>
-      Proszę czekać.
-    </div>
+    <div class="overlay-box">⏳ Aktualizuję bazę części...<br>Proszę czekać.</div>
   </div>
 
-  <!-- ILOŚĆ CZĘŚCI -->
   <div id="partModal" class="overlay">
     <div class="overlay-box">
       <div class="modal-title">Ilość części</div>
       <div id="modalPartName" class="modal-part"></div>
-
       <input type="number" id="modalQty" min="1" value="1" placeholder="ILOŚĆ">
-
-      <div class="choice-row">
-        <button class="ok-btn" onclick="confirmPart()">OK</button>
-      </div>
-
+      <div class="choice-row"><button class="ok-btn" onclick="confirmPart()">OK</button></div>
       <button class="cancel-btn" onclick="closePartModal()">Anuluj</button>
     </div>
   </div>
 
-
-<!-- OKNA APLIKACJI -->
-<div id="appDialog" class="app-dialog">
-  <div class="app-dialog-box">
-    <div id="appDialogTitle" class="app-dialog-title">Komunikat</div>
-    <div id="appDialogMessage" class="app-dialog-message"></div>
-    <div class="app-dialog-actions">
-      <button id="appDialogCancel" class="app-dialog-cancel" type="button">Anuluj</button>
-      <button id="appDialogOk" class="app-dialog-ok" type="button">OK</button>
+  <div id="appDialog" class="app-dialog">
+    <div class="app-dialog-box">
+      <div id="appDialogTitle" class="app-dialog-title">Komunikat</div>
+      <div id="appDialogMessage" class="app-dialog-message"></div>
+      <div class="app-dialog-actions">
+        <button id="appDialogCancel" class="app-dialog-cancel" type="button">Anuluj</button>
+        <button id="appDialogOk" class="app-dialog-ok" type="button">OK</button>
+      </div>
     </div>
   </div>
-</div>
 
-  <script>
-    
-
+<script>
 let appDialogResolve = null;
 
 function appDialog(options) {
@@ -616,16 +540,13 @@ function appDialog(options) {
     }
 
     appDialogResolve = resolve;
-
     title.textContent = options.title || "Komunikat";
     message.textContent = options.message || "";
     okBtn.textContent = options.okText || "OK";
     cancelBtn.textContent = options.cancelText || "Anuluj";
     cancelBtn.style.display = options.showCancel ? "block" : "none";
-
     okBtn.onclick = () => closeAppDialog(true);
     cancelBtn.onclick = () => closeAppDialog(false);
-
     overlay.style.display = "flex";
     setTimeout(() => okBtn.focus(), 50);
   });
@@ -634,7 +555,6 @@ function appDialog(options) {
 function closeAppDialog(value) {
   const overlay = document.getElementById("appDialog");
   if (overlay) overlay.style.display = "none";
-
   if (appDialogResolve) {
     const resolve = appDialogResolve;
     appDialogResolve = null;
@@ -643,797 +563,611 @@ function closeAppDialog(value) {
 }
 
 function appAlert(message, title = "Komunikat") {
-  return appDialog({
-    title,
-    message,
-    okText: "OK",
-    showCancel: false
-  });
+  return appDialog({ title, message, okText: "OK", showCancel: false });
 }
 
 function appConfirm(message, title = "Potwierdzenie") {
-  return appDialog({
-    title,
-    message,
-    okText: "OK",
-    cancelText: "Anuluj",
-    showCancel: true
-  });
+  return appDialog({ title, message, okText: "OK", cancelText: "Anuluj", showCancel: true });
 }
 
 function goBack() {
-      window.location.replace("index.html");
-    }
-
-
-
-
-    const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
-
-    const allowed = [
-      "FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO",
-      "HICU", "HIDUO", "HIUNO", "FMB", "LQB", "RQB",
-      "CUIND", "EXTIND", "CUOUT", "EXTOUT"
-    ];
-
-    let codes = [];
-
-    let bazaCzesci = [];
-    let listaCzesci = [];
-    let selectedPart = null;
-
-    let html5QrModul;
-    let isModuleScanning = false;
-    let lastManualSN = "";
-
-    function showModulesSection() {
-      const section = document.getElementById("modulesSection");
-      const btn = document.getElementById("showModulesBtn");
-
-      if (section.classList.contains("hidden")) {
-        section.classList.remove("hidden");
-
-        btn.style.height = "29px";
-        btn.style.fontSize = "0.8rem";
-        btn.style.margin = "12px 0 4px";
-        btn.style.padding = "0";
-        btn.style.display = "flex";
-        btn.style.alignItems = "center";
-        btn.style.justifyContent = "center";
-      } else {
-        section.classList.add("hidden");
-
-        btn.style.height = "48px";
-        btn.style.fontSize = "1rem";
-        btn.style.margin = "10px 0 8px";
-        btn.style.padding = "10px";
-        btn.style.display = "block";
-      }
-    }
-
-    function showPartsSection() {
-      const section = document.getElementById("partsSection");
-      const btn = document.getElementById("showPartsBtn");
-
-      if (section.classList.contains("hidden")) {
-        section.classList.remove("hidden");
-
-        btn.style.height = "29px";
-        btn.style.fontSize = "0.8rem";
-        btn.style.margin = "12px 0 4px";
-        btn.style.padding = "0";
-        btn.style.display = "flex";
-        btn.style.alignItems = "center";
-        btn.style.justifyContent = "center";
-      } else {
-        section.classList.add("hidden");
-
-        btn.style.height = "48px";
-        btn.style.fontSize = "1rem";
-        btn.style.margin = "18px 0 8px";
-        btn.style.padding = "10px";
-        btn.style.display = "block";
-      }
-    }
-
-    function formatManualSN(input) {
-      let val = input.value.toUpperCase();
-
-      const isDeleting = val.length < lastManualSN.length;
-
-      if (isDeleting) {
-        input.value = val;
-        lastManualSN = val;
-        return;
-      }
-
-      if (val.includes("/")) {
-        input.value = val;
-        lastManualSN = val;
-        return;
-      }
-
-      if (/^\d{2}$/.test(val)) {
-        val = val + "/";
-      }
-
-      input.value = val;
-      lastManualSN = val;
-    }
-
-    function cleanSN(value) {
-  let val = String(value || "").toUpperCase().trim();
-
-  // Usuń "MZ" oraz wszystko, co znajduje się po nim
-  val = val.replace(/\s+MZ(?:\s+.*)?$/i, "");
-
-  // Usuń ewentualną spację przed dwuliterową końcówką
-  val = val.replace(/\s+([A-Z]{2})$/i, "$1");
-
-  return val.trim();
+  stopModuleScanning();
+  window.location.replace("index.html");
 }
 
-    function saveCodes() {
-      localStorage.setItem("codesWZ", JSON.stringify(codes));
-    }
+const scriptURL = "https://script.google.com/macros/s/AKfycby5xJAHto5XHSwXGWDoaUyjvZHB_rEBd6pqhUkk5JrvPw807HazHGvMKr00ZrG5rLGwIg/exec";
+const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","CUIND","EXTIND","CUOUT","EXTOUT"];
 
-    function updateList() {
-      const list = document.getElementById("codeList");
-      const count = document.getElementById("codeCount");
+let codes = [];
+let bazaCzesci = [];
+let listaCzesci = [];
+let selectedPart = null;
+let lastManualSN = "";
+let moduleScanMode = "single";
+let moduleScanner = null;
 
-      list.innerHTML = "";
-      count.textContent = String(codes.length);
+function showModulesSection() {
+  const section = document.getElementById("modulesSection");
+  const btn = document.getElementById("showModulesBtn");
 
-      codes.forEach((item, index) => {
-        const li = document.createElement("li");
-        li.className = "module-row";
+  if (section.classList.contains("hidden")) {
+    section.classList.remove("hidden");
+    btn.style.height = "29px";
+    btn.style.fontSize = "0.8rem";
+    btn.style.margin = "12px 0 4px";
+    btn.style.padding = "0";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+  } else {
+    stopModuleScanning();
+    section.classList.add("hidden");
+    btn.style.height = "48px";
+    btn.style.fontSize = "1rem";
+    btn.style.margin = "10px 0 8px";
+    btn.style.padding = "10px";
+    btn.style.display = "block";
+  }
+}
 
-        const inputNote = document.createElement("input");
-        inputNote.type = "text";
-        inputNote.placeholder = "TYP";
-        inputNote.className = "note-input";
-        inputNote.value = item.note || "";
-        inputNote.setAttribute("list", "typList");
-        inputNote.autocomplete = "off";
-        inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
+function showPartsSection() {
+  const section = document.getElementById("partsSection");
+  const btn = document.getElementById("showPartsBtn");
 
-        inputNote.onclick = () => {
-          if (typeof inputNote.showPicker === "function") {
-            inputNote.showPicker();
-          }
-        };
+  if (section.classList.contains("hidden")) {
+    section.classList.remove("hidden");
+    btn.style.height = "29px";
+    btn.style.fontSize = "0.8rem";
+    btn.style.margin = "12px 0 4px";
+    btn.style.padding = "0";
+    btn.style.display = "flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+  } else {
+    section.classList.add("hidden");
+    btn.style.height = "48px";
+    btn.style.fontSize = "1rem";
+    btn.style.margin = "18px 0 8px";
+    btn.style.padding = "10px";
+    btn.style.display = "block";
+  }
+}
 
-        inputNote.oninput = () => {
-          const val = inputNote.value.toUpperCase().trim();
-          inputNote.value = val;
-          codes[index].note = val;
-          inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
-          saveCodes();
-        };
+function formatManualSN(input) {
+  let val = input.value.toUpperCase();
+  const isDeleting = val.length < lastManualSN.length;
 
-        const codeText = document.createElement("input");
-        codeText.type = "text";
-        codeText.value = item.value;
-        codeText.className = "code-text";
-
-        codeText.onchange = () => {
-          const cleaned = cleanSN(codeText.value);
-          const detectedType = detectModuleType(cleaned);
-
-          codeText.value = cleaned;
-          codes[index].value = cleaned;
-
-          if (detectedType) {
-            codes[index].note = detectedType;
-          }
-
-          saveCodes();
-          updateList();
-        };
-
-        const remove = document.createElement("span");
-        remove.className = "remove-btn";
-        remove.textContent = "✕";
-        remove.title = "Usuń";
-
-        remove.onclick = async () => {
-          const sn = cleanSN(item.value || "");
-
-          if (!(await appConfirm("Czy na pewno chcesz usunąć moduł z listy?\n\n" + sn, "Usuń moduł"))) {
-            return;
-          }
-
-          codes.splice(index, 1);
-          saveCodes();
-          updateList();
-        };
-
-        li.appendChild(inputNote);
-        li.appendChild(codeText);
-        li.appendChild(remove);
-        list.appendChild(li);
-      });
-
-      saveCodes();
-    }
-
-
-    function detectModuleType(value) {
-  const sn = cleanSN(value);
-  const body = sn.includes("/") ? sn.split("/").pop() : sn;
-
-  // Prefiksy konfliktowe zostają bez automatycznego typu:
-  // CDD, CDI, LD, RD
-  // Kolejność jest ważna: najpierw dłuższe prefiksy, potem krótsze.
-  const rules = [
-    ["LQBN", "LQB"],
-    ["RQBN", "RQB"],
-    ["LSUX", "XS"],
-    ["CDHI", "HICU"],
-    ["CQBM", "FMB"],
-
-    ["CQM", "FM"],
-    ["CQU", "FM"],
-
-    ["LQU", "LQ"],
-    ["RQU", "RQ"],
-
-    ["LSX", "XS"],
-    ["CDH", "HICU"],
-
-    ["LDI", "DUO"],
-    ["RDI", "DUO"],
-    ["RDH", "HIDUO"],
-
-    ["RSH", "HIUNO"],
-    ["LDU", "ODL"],
-    ["RDU", "ODR"],
-
-    ["CDJ", "CUIND"],
-    ["DDJ", "EXTIND"],
-    ["CDT", "CUOUT"],
-    ["DDT", "EXTOUT"],
-
-    ["LQ", "LQ"],
-    ["RQ", "RQ"],
-    ["LS", "XS"]
-  ];
-
-  for (const [prefix, type] of rules) {
-    if (body.startsWith(prefix)) return type;
+  if (isDeleting || val.includes("/")) {
+    input.value = val;
+    lastManualSN = val;
+    return;
   }
 
-  return "";
+  if (/^\d{2}$/.test(val)) val += "/";
+  input.value = val;
+  lastManualSN = val;
 }
 
-function addManual() {
-      const input = document.getElementById("manualInput");
-      const val = cleanSN(input.value);
+function saveCodes() {
+  localStorage.setItem("codesWZ", JSON.stringify(codes));
+}
 
-      if (!val || val.length < 3) {
-        appAlert("Kod zbyt krótki lub pusty.", "Błąd");
+function updateList() {
+  const list = document.getElementById("codeList");
+  const count = document.getElementById("codeCount");
+  list.innerHTML = "";
+  count.textContent = String(codes.length);
+
+  codes.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.className = "module-row";
+
+    const inputNote = document.createElement("input");
+    inputNote.type = "text";
+    inputNote.placeholder = "TYP";
+    inputNote.className = "note-input";
+    inputNote.value = item.note || "";
+    inputNote.setAttribute("list", "typList");
+    inputNote.autocomplete = "off";
+    inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
+
+    inputNote.onclick = () => {
+      if (typeof inputNote.showPicker === "function") inputNote.showPicker();
+    };
+
+    inputNote.oninput = () => {
+      const val = inputNote.value.toUpperCase().trim();
+      inputNote.value = val;
+      codes[index].note = val;
+      inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
+      saveCodes();
+    };
+
+    const codeText = document.createElement("input");
+    codeText.type = "text";
+    codeText.value = item.value;
+    codeText.className = "code-text";
+
+    codeText.onchange = async () => {
+      const cleaned = cleanSN(codeText.value);
+      const duplicate = codes.some((entry, entryIndex) => entryIndex !== index && cleanSN(entry.value) === cleaned);
+
+      if (duplicate) {
+        codeText.value = item.value;
+        await appAlert("Kod już zeskanowany:\n" + cleaned, "Duplikat");
         return;
       }
 
-      const exists = codes.find(c => cleanSN(c.value) === val);
+      const detectedType = detectModuleType(cleaned);
+      codeText.value = cleaned;
+      codes[index].value = cleaned;
+      if (detectedType) codes[index].note = detectedType;
+      saveCodes();
+      updateList();
+    };
 
-      if (!exists) {
-        codes.unshift({ value: val, note: detectModuleType(val) });
-        saveCodes();
-        updateList();
-      }
+    const remove = document.createElement("span");
+    remove.className = "remove-btn";
+    remove.textContent = "✕";
+    remove.title = "Usuń";
+    remove.onclick = async () => {
+      const sn = cleanSN(item.value || "");
+      if (!(await appConfirm("Czy na pewno chcesz usunąć moduł z listy?\n\n" + sn, "Usuń moduł"))) return;
+      codes.splice(index, 1);
+      saveCodes();
+      updateList();
+    };
 
-      input.value = "";
-      lastManualSN = "";
+    li.appendChild(inputNote);
+    li.appendChild(codeText);
+    li.appendChild(remove);
+    list.appendChild(li);
+  });
+
+  saveCodes();
+}
+
+async function addManual() {
+  const input = document.getElementById("manualInput");
+  const val = cleanSN(input.value);
+
+  if (!val || val.length < 3) {
+    await appAlert("Kod zbyt krótki lub pusty.", "Błąd");
+    return;
+  }
+
+  if (hasDuplicateSN(codes, val)) {
+    await appAlert("Kod już zeskanowany:\n" + val, "Duplikat");
+    input.value = "";
+    lastManualSN = "";
+    return;
+  }
+
+  codes.unshift({ value: val, note: detectModuleType(val) });
+  saveCodes();
+  updateList();
+  input.value = "";
+  lastManualSN = "";
+}
+
+function normalizeText(text) {
+  return String(text || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+const PARTS_BASE_CACHE_KEY = "partsBaseCache_v1";
+const PARTS_BASE_TIME_KEY = "partsBaseCacheTime_v1";
+const PARTS_BASE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+const BASE_STATUS_DOUBLE_CLICK_MS = 600;
+let lastBaseStatusClick = 0;
+
+function formatBaseDate(timestamp) {
+  const d = new Date(timestamp);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return `${hh}:${mm} ${day}.${month}`;
+}
+
+function setBaseStatus(text, isError) {
+  const el = document.getElementById("partsBaseStatus");
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle("error", !!isError);
+}
+
+function enablePartsBase() {
+  document.getElementById("searchInput").disabled = false;
+  document.getElementById("loadingOverlay").style.display = "none";
+}
+
+function loadPartsBaseFromCache() {
+  const savedBase = localStorage.getItem(PARTS_BASE_CACHE_KEY);
+  const savedTime = Number(localStorage.getItem(PARTS_BASE_TIME_KEY) || 0);
+
+  if (!savedBase || !savedTime) {
+    setBaseStatus("Baza części: brak", false);
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(savedBase);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      setBaseStatus("Baza części: brak", false);
+      return false;
     }
 
-    function normalizeText(text) {
-      return String(text || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim();
-    }
+    bazaCzesci = parsed;
+    enablePartsBase();
+    setBaseStatus("Baza z dnia: " + formatBaseDate(savedTime), false);
+    return savedTime;
+  } catch {
+    setBaseStatus("BŁĄD AKTUALIZACJI", true);
+    return false;
+  }
+}
 
-    const PARTS_BASE_CACHE_KEY = "partsBaseCache_v1";
-    const PARTS_BASE_TIME_KEY = "partsBaseCacheTime_v1";
-    const PARTS_BASE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
-    const BASE_STATUS_DOUBLE_CLICK_MS = 600;
-
-    let lastBaseStatusClick = 0;
-
-    function formatBaseDate(timestamp) {
-      const d = new Date(timestamp);
-
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mm = String(d.getMinutes()).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-
-      return `${hh}:${mm} ${day}.${month}`;
-    }
-
-    function setBaseStatus(text, isError) {
-      const el = document.getElementById("partsBaseStatus");
-      if (!el) return;
-
-      el.textContent = text;
-
-      if (isError) {
-        el.classList.add("error");
-      } else {
-        el.classList.remove("error");
-      }
-    }
-
-    function enablePartsBase() {
-      document.getElementById("searchInput").disabled = false;
-      document.getElementById("loadingOverlay").style.display = "none";
-    }
-
-    function loadPartsBaseFromCache() {
-      const savedBase = localStorage.getItem(PARTS_BASE_CACHE_KEY);
-      const savedTime = Number(localStorage.getItem(PARTS_BASE_TIME_KEY) || 0);
-
-      if (!savedBase || !savedTime) {
-        setBaseStatus("Baza części: brak", false);
-        return false;
-      }
-
-      try {
-        const parsed = JSON.parse(savedBase);
-
-        if (!Array.isArray(parsed) || parsed.length === 0) {
-          setBaseStatus("Baza części: brak", false);
-          return false;
-        }
-
-        bazaCzesci = parsed;
-        enablePartsBase();
-        setBaseStatus("Baza z dnia: " + formatBaseDate(savedTime), false);
-
-        return savedTime;
-      } catch {
+function refreshPartsBaseInBackground() {
+  fetch(scriptURL + "?akcja=bazaCzesci")
+    .then(res => res.json())
+    .then(data => {
+      if (!data.ok || !Array.isArray(data.czesci) || data.czesci.length === 0) {
         setBaseStatus("BŁĄD AKTUALIZACJI", true);
-        return false;
+        document.getElementById("loadingOverlay").style.display = "none";
+        return;
       }
-    }
 
-    function refreshPartsBaseInBackground() {
-      fetch(scriptURL + "?akcja=bazaCzesci")
-        .then(res => res.json())
-        .then(data => {
-          if (!data.ok || !Array.isArray(data.czesci) || data.czesci.length === 0) {
-            setBaseStatus("BŁĄD AKTUALIZACJI", true);
-            document.getElementById("loadingOverlay").style.display = "none";
-            return;
-          }
-
-          bazaCzesci = data.czesci;
-
-          const now = Date.now();
-          localStorage.setItem(PARTS_BASE_CACHE_KEY, JSON.stringify(bazaCzesci));
-          localStorage.setItem(PARTS_BASE_TIME_KEY, String(now));
-
-          enablePartsBase();
-          setBaseStatus("Baza z dnia: " + formatBaseDate(now), false);
-        })
-        .catch(err => {
-          setBaseStatus("BŁĄD AKTUALIZACJI", true);
-          document.getElementById("loadingOverlay").style.display = "none";
-        });
-    }
-
-    function forceRefreshPartsBase() {
-      setBaseStatus("Aktualizuję bazę części...", false);
-      refreshPartsBaseInBackground();
-    }
-
-    function handleBaseStatusClick() {
+      bazaCzesci = data.czesci;
       const now = Date.now();
+      localStorage.setItem(PARTS_BASE_CACHE_KEY, JSON.stringify(bazaCzesci));
+      localStorage.setItem(PARTS_BASE_TIME_KEY, String(now));
+      enablePartsBase();
+      setBaseStatus("Baza z dnia: " + formatBaseDate(now), false);
+    })
+    .catch(() => {
+      setBaseStatus("BŁĄD AKTUALIZACJI", true);
+      document.getElementById("loadingOverlay").style.display = "none";
+    });
+}
 
-      if (now - lastBaseStatusClick <= BASE_STATUS_DOUBLE_CLICK_MS) {
-        lastBaseStatusClick = 0;
-        forceRefreshPartsBase();
-        return;
-      }
+function forceRefreshPartsBase() {
+  setBaseStatus("Aktualizuję bazę części...", false);
+  refreshPartsBaseInBackground();
+}
 
-      lastBaseStatusClick = now;
+function handleBaseStatusClick() {
+  const now = Date.now();
+  if (now - lastBaseStatusClick <= BASE_STATUS_DOUBLE_CLICK_MS) {
+    lastBaseStatusClick = 0;
+    forceRefreshPartsBase();
+    return;
+  }
+  lastBaseStatusClick = now;
+}
+
+function loadPartsBase() {
+  const savedTime = loadPartsBaseFromCache();
+  if (!savedTime) {
+    refreshPartsBaseInBackground();
+    return;
+  }
+  if (Date.now() - savedTime > PARTS_BASE_MAX_AGE) refreshPartsBaseInBackground();
+}
+
+function searchParts() {
+  const input = document.getElementById("searchInput");
+  const resultsBox = document.getElementById("searchResults");
+  const query = normalizeText(input.value);
+  resultsBox.innerHTML = "";
+
+  if (query.length < 2) {
+    resultsBox.style.display = "none";
+    return;
+  }
+
+  const results = bazaCzesci.filter(part => {
+    const nazwa = normalizeText(part.nazwa);
+    const indeks = normalizeText(part.indeks);
+    return nazwa.includes(query) || indeks.includes(query);
+  }).slice(0, 20);
+
+  if (results.length === 0) {
+    resultsBox.style.display = "block";
+    const empty = document.createElement("div");
+    empty.className = "result-item";
+    empty.textContent = "Brak wyników";
+    resultsBox.appendChild(empty);
+    return;
+  }
+
+  results.forEach(part => {
+    const div = document.createElement("div");
+    div.className = "result-item";
+    div.textContent = part.nazwa;
+    div.onclick = () => {
+      resultsBox.style.display = "none";
+      input.value = "";
+      openPartModal(part);
+    };
+    resultsBox.appendChild(div);
+  });
+
+  resultsBox.style.display = "block";
+}
+
+function openPartModal(part) {
+  selectedPart = part;
+  document.getElementById("modalPartName").textContent = part.nazwa;
+  document.getElementById("modalQty").value = 1;
+  document.getElementById("partModal").style.display = "flex";
+}
+
+function closePartModal() {
+  selectedPart = null;
+  document.getElementById("partModal").style.display = "none";
+}
+
+function confirmPart() {
+  if (!selectedPart) return;
+  const qty = Number(document.getElementById("modalQty").value || 0);
+
+  if (!qty || qty <= 0) {
+    appAlert("Podaj ilość większą od zera.", "Błąd");
+    return;
+  }
+
+  addPartToList({ indeks: selectedPart.indeks, nazwa: selectedPart.nazwa, ilosc: -Math.abs(qty) });
+  closePartModal();
+}
+
+function addPartToList(part) {
+  const existing = listaCzesci.find(item => String(item.indeks || "").trim().toUpperCase() === String(part.indeks || "").trim().toUpperCase());
+
+  if (existing) {
+    existing.ilosc = Number(existing.ilosc || 0) + Number(part.ilosc || 0);
+    if (existing.ilosc === 0) {
+      listaCzesci = listaCzesci.filter(item => String(item.indeks || "").trim().toUpperCase() !== String(part.indeks || "").trim().toUpperCase());
     }
+  } else {
+    listaCzesci.unshift(part);
+  }
 
-    function loadPartsBase() {
-      const savedTime = loadPartsBaseFromCache();
+  savePartsList();
+  updatePartsList();
+}
 
-      if (!savedTime) {
-        refreshPartsBaseInBackground();
-        return;
+function savePartsList() {
+  localStorage.setItem("partsWZ", JSON.stringify(listaCzesci));
+}
+
+function updatePartsList() {
+  const list = document.getElementById("partList");
+  const count = document.getElementById("partCount");
+  list.innerHTML = "";
+  count.textContent = String(listaCzesci.length);
+
+  listaCzesci.forEach((item, index) => {
+    const li = document.createElement("li");
+    const name = document.createElement("div");
+    name.className = "part-name";
+    name.textContent = item.nazwa || "";
+
+    const qty = document.createElement("input");
+    qty.type = "number";
+    qty.min = "1";
+    qty.value = Math.abs(Number(item.ilosc || 0));
+    qty.className = "part-qty";
+    qty.oninput = () => {
+      const newQty = Number(qty.value || 0);
+      if (newQty > 0) {
+        listaCzesci[index].ilosc = -Math.abs(newQty);
+        savePartsList();
       }
+    };
 
-      const age = Date.now() - savedTime;
-
-      if (age > PARTS_BASE_MAX_AGE) {
-        refreshPartsBaseInBackground();
-      }
-    }
-
-    function searchParts() {
-      const input = document.getElementById("searchInput");
-      const resultsBox = document.getElementById("searchResults");
-      const query = normalizeText(input.value);
-
-      resultsBox.innerHTML = "";
-
-      if (query.length < 2) {
-        resultsBox.style.display = "none";
-        return;
-      }
-
-      const results = bazaCzesci
-        .filter(part => {
-          const nazwa = normalizeText(part.nazwa);
-          const indeks = normalizeText(part.indeks);
-          return nazwa.includes(query) || indeks.includes(query);
-        })
-        .slice(0, 20);
-
-      if (results.length === 0) {
-        resultsBox.style.display = "block";
-        const empty = document.createElement("div");
-        empty.className = "result-item";
-        empty.textContent = "Brak wyników";
-        resultsBox.appendChild(empty);
-        return;
-      }
-
-      results.forEach(part => {
-        const div = document.createElement("div");
-        div.className = "result-item";
-        div.textContent = part.nazwa;
-
-        div.onclick = () => {
-          resultsBox.style.display = "none";
-          input.value = "";
-          openPartModal(part);
-        };
-
-        resultsBox.appendChild(div);
-      });
-
-      resultsBox.style.display = "block";
-    }
-
-    function openPartModal(part) {
-      selectedPart = part;
-      document.getElementById("modalPartName").textContent = part.nazwa;
-      document.getElementById("modalQty").value = 1;
-      document.getElementById("partModal").style.display = "flex";
-    }
-
-    function closePartModal() {
-      selectedPart = null;
-      document.getElementById("partModal").style.display = "none";
-    }
-
-    function confirmPart() {
-      if (!selectedPart) return;
-
-      const qty = Number(document.getElementById("modalQty").value || 0);
-
-      if (!qty || qty <= 0) {
-        appAlert("Podaj ilość większą od zera.", "Błąd");
-        return;
-      }
-
-      addPartToList({
-        indeks: selectedPart.indeks,
-        nazwa: selectedPart.nazwa,
-        ilosc: -Math.abs(qty)
-      });
-
-      closePartModal();
-    }
-
-    function addPartToList(part) {
-      const existing = listaCzesci.find(item =>
-        String(item.indeks || "").trim().toUpperCase() === String(part.indeks || "").trim().toUpperCase()
-      );
-
-      if (existing) {
-        existing.ilosc = Number(existing.ilosc || 0) + Number(part.ilosc || 0);
-
-        if (existing.ilosc === 0) {
-          listaCzesci = listaCzesci.filter(item =>
-            String(item.indeks || "").trim().toUpperCase() !== String(part.indeks || "").trim().toUpperCase()
-          );
-        }
-      } else {
-        listaCzesci.unshift(part);
-      }
-
+    const remove = document.createElement("span");
+    remove.className = "remove-btn";
+    remove.textContent = "✕";
+    remove.title = "Usuń";
+    remove.onclick = async () => {
+      if (!(await appConfirm("Czy na pewno chcesz usunąć część z listy?\n\n" + (item.nazwa || "tę pozycję"), "Usuń część"))) return;
+      listaCzesci.splice(index, 1);
       savePartsList();
       updatePartsList();
+    };
+
+    li.appendChild(name);
+    li.appendChild(qty);
+    li.appendChild(remove);
+    list.appendChild(li);
+  });
+}
+
+async function sendData() {
+  const login = localStorage.getItem("login") || "";
+  const trasa = localStorage.getItem("trasa") || "";
+  const przewoznik = localStorage.getItem("przewoznik") || "";
+  const tablica = localStorage.getItem("tablica") || "";
+  const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
+
+  if (!login || !trasa || !przewoznik || !tablica) {
+    await appAlert("Brakuje danych trasy lub użytkownika.", "Błąd");
+    return;
+  }
+
+  if (codes.length === 0 && listaCzesci.length === 0) {
+    await appAlert("Lista modułów i części jest pusta.", "Błąd");
+    return;
+  }
+
+  for (const c of codes) {
+    const typ = (c.note || "").toString().trim().toUpperCase();
+    if (!allowed.includes(typ)) {
+      await appAlert(`Nieprawidłowy TYP: "${typ}". Wybierz z listy.`, "Błąd");
+      return;
     }
+  }
 
-    function savePartsList() {
-      localStorage.setItem("partsWZ", JSON.stringify(listaCzesci));
-    }
+  if (!(await appConfirm("Czy na pewno chcesz wysłać dane?", "Wysyłanie danych"))) return;
 
-    function updatePartsList() {
-      const list = document.getElementById("partList");
-      const count = document.getElementById("partCount");
+  await stopModuleScanning();
+  document.getElementById("sendingOverlay").style.display = "flex";
 
-      list.innerHTML = "";
-      count.textContent = String(listaCzesci.length);
+  const finalData = codes.map(c => {
+    const kod = cleanSN(c.value);
+    const typ = (c.note || "").toString().trim().toUpperCase();
+    return `${kod} | ${typ}`;
+  });
 
-      listaCzesci.forEach((item, index) => {
-        const li = document.createElement("li");
+  const formData = new FormData();
+  formData.append("login", login.toUpperCase());
+  formData.append("trasa", trasa.toUpperCase());
+  formData.append("przewoznik", przewoznik.toUpperCase());
+  formData.append("tablica", tablica.toUpperCase());
+  formData.append("dodatkowe", dodatkoweInfo || "-");
+  formData.append("kody", JSON.stringify(finalData));
+  formData.append("czesci", JSON.stringify(listaCzesci));
+  formData.append("strona", "wz");
 
-        const name = document.createElement("div");
-        name.className = "part-name";
-        name.textContent = item.nazwa || "";
-
-        const qty = document.createElement("input");
-        qty.type = "number";
-        qty.min = "1";
-        qty.value = Math.abs(Number(item.ilosc || 0));
-        qty.className = "part-qty";
-
-        qty.oninput = () => {
-          const newQty = Number(qty.value || 0);
-          if (newQty > 0) {
-            listaCzesci[index].ilosc = -Math.abs(newQty);
-            savePartsList();
-          }
-        };
-
-        const remove = document.createElement("span");
-        remove.className = "remove-btn";
-        remove.textContent = "✕";
-        remove.title = "Usuń";
-
-        remove.onclick = async () => {
-          const name = item.nazwa || "tę pozycję";
-
-          if (!(await appConfirm("Czy na pewno chcesz usunąć część z listy?\n\n" + name, "Usuń część"))) {
-            return;
-          }
-
-          listaCzesci.splice(index, 1);
-          savePartsList();
-          updatePartsList();
-        };
-
-        li.appendChild(name);
-        li.appendChild(qty);
-        li.appendChild(remove);
-        list.appendChild(li);
-      });
-    }
-
-    async function sendData() {
-      const login = localStorage.getItem("login") || "";
-      const trasa = localStorage.getItem("trasa") || "";
-      const przewoznik = localStorage.getItem("przewoznik") || "";
-      const tablica = localStorage.getItem("tablica") || "";
-      const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
-
-      if (!login || !trasa || !przewoznik || !tablica || (codes.length === 0 && listaCzesci.length === 0)) {
-        await appAlert("Brakuje danych lub lista modułów/części jest pusta.", "Błąd");
-        return;
-      }
-
-      for (const c of codes) {
-        const typ = (c.note || "").toString().trim().toUpperCase();
-
-        if (!allowed.includes(typ)) {
-          await appAlert(`Nieprawidłowy TYP: "${typ}". Wybierz z listy.`, "Błąd");
-          return;
-        }
-      }
-
-      if (!(await appConfirm("Czy na pewno chcesz wysłać dane?", "Wysyłanie danych"))) return;
-
-      document.getElementById("sendingOverlay").style.display = "flex";
-
-      const finalData = codes.map(c => {
-        const kod = cleanSN(c.value);
-        const typ = (c.note || "").toString().trim().toUpperCase();
-        return `${kod} | ${typ}`;
-      });
-
-      const formData = new FormData();
-      formData.append("login", login.toUpperCase());
-      formData.append("trasa", trasa.toUpperCase());
-      formData.append("przewoznik", przewoznik.toUpperCase());
-      formData.append("tablica", tablica.toUpperCase());
-      formData.append("dodatkowe", dodatkoweInfo || "-");
-      formData.append("kody", JSON.stringify(finalData));
-      formData.append("czesci", JSON.stringify(listaCzesci));
-      formData.append("strona", "wz");
-
-      fetch(scriptURL, { method: "POST", body: formData })
-        .then(res => res.text())
-        .then(async txt => {
-          await appAlert("✅ Dane wysłane.", "Gotowe");
-
-          codes = [];
-          localStorage.removeItem("codesWZ");
-          updateList();
-
-          listaCzesci = [];
-          localStorage.removeItem("partsWZ");
-          updatePartsList();
-
-          localStorage.removeItem("trasa");
-          localStorage.removeItem("przewoznik");
-          localStorage.removeItem("tablica");
-          localStorage.removeItem("tablicaSam");
-          localStorage.removeItem("tablicaNacz");
-
-          sessionStorage.setItem("clearInputsAfterSend", "1");
-          window.location.replace("index.html");
-        })
-        .catch(err => {
-          document.getElementById("sendingOverlay").style.display = "none";
-          document.getElementById("status").innerText = "❌ Błąd: " + err;
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const savedCodes = localStorage.getItem("codesWZ");
-
-      if (savedCodes) {
-        try {
-          const parsed = JSON.parse(savedCodes);
-
-          codes = Array.isArray(parsed)
-            ? parsed.map(it => {
-                const note = (it.note ?? it.typ ?? "").toString().toUpperCase().trim();
-                const value = cleanSN(it.value ?? it.kod ?? "");
-                return { value, note };
-              })
-            : [];
-
-          localStorage.setItem("codesWZ", JSON.stringify(codes));
-        } catch {
-          codes = [];
-        }
-      }
-
+  fetch(scriptURL, { method: "POST", body: formData })
+    .then(res => res.text())
+    .then(async () => {
+      await appAlert("✅ Dane wysłane.", "Gotowe");
+      codes = [];
+      localStorage.removeItem("codesWZ");
       updateList();
-
-      const savedParts = localStorage.getItem("partsWZ");
-
-      if (savedParts) {
-        try {
-          const parsed = JSON.parse(savedParts);
-          listaCzesci = Array.isArray(parsed) ? parsed : [];
-        } catch {
-          listaCzesci = [];
-        }
-      }
-
+      listaCzesci = [];
+      localStorage.removeItem("partsWZ");
       updatePartsList();
-
-      const login = localStorage.getItem("login") || "brak";
-      const trasa = localStorage.getItem("trasa") || "brak";
-      const przewoznik = localStorage.getItem("przewoznik") || "brak";
-      const tablica = localStorage.getItem("tablica") || "brak";
-
-      document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${przewoznik}  -  ${tablica}`;
-
-      document.getElementById("searchInput").addEventListener("input", searchParts);
-
-      loadPartsBase();
+      localStorage.removeItem("trasa");
+      localStorage.removeItem("przewoznik");
+      localStorage.removeItem("tablica");
+      localStorage.removeItem("tablicaSam");
+      localStorage.removeItem("tablicaNacz");
+      sessionStorage.setItem("clearInputsAfterSend", "1");
+      window.location.replace("index.html");
+    })
+    .catch(err => {
+      document.getElementById("sendingOverlay").style.display = "none";
+      document.getElementById("status").innerText = "❌ Błąd: " + err;
     });
+}
 
-    function startModuleScanning() {
-      if (isModuleScanning) return;
-      isModuleScanning = true;
+function ensureModuleScanner() {
+  if (moduleScanner) return moduleScanner;
 
-      document.getElementById("startScanModulBtn").style.display = "none";
+  moduleScanner = new ModuleScanner({
+    readerId: "readerModul",
+    getItems: () => codes,
+    onAdded: async value => {
+      codes.unshift({ value, note: detectModuleType(value) });
+      saveCodes();
+      updateList();
+      if ("vibrate" in navigator) navigator.vibrate(180);
+      const beep = document.getElementById("beepSound");
+      if (beep) beep.play().catch(() => {});
+    },
+    onDuplicate: async value => {
+      if ("vibrate" in navigator) navigator.vibrate([100, 80, 100]);
+      await appAlert("Kod już zeskanowany:\n" + value, "Duplikat");
+    },
+    onError: error => {
+      appAlert("Błąd kamery: " + (error && error.message ? error.message : error), "Kamera");
+    },
+    onStateChange: state => updateModuleScannerUi(state.running)
+  });
 
-      const readerDiv = document.getElementById("readerModul");
-      readerDiv.style.display = "block";
-      readerDiv.innerHTML = "";
+  moduleScanner.setMode(moduleScanMode);
+  return moduleScanner;
+}
 
-      html5QrModul = new Html5Qrcode("readerModul");
+function setModuleScanMode(mode) {
+  if (moduleScanner && moduleScanner.running) return;
+  moduleScanMode = mode === "serial" ? "serial" : "single";
+  if (moduleScanner) moduleScanner.setMode(moduleScanMode);
+  document.getElementById("scanModeSingle").classList.toggle("active", moduleScanMode === "single");
+  document.getElementById("scanModeSerial").classList.toggle("active", moduleScanMode === "serial");
+}
 
-      Html5Qrcode.getCameras().then(cameras => {
-        if (cameras && cameras.length) {
-          const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
+function updateModuleScannerUi(running) {
+  const reader = document.getElementById("readerModul");
+  const startBtn = document.getElementById("startScanModulBtn");
+  const stopBtn = document.getElementById("stopScanModulBtn");
+  const singleBtn = document.getElementById("scanModeSingle");
+  const serialBtn = document.getElementById("scanModeSerial");
 
-          html5QrModul.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
-            stopModuleScanning();
+  reader.style.display = running ? "block" : "none";
+  startBtn.style.display = running ? "none" : "block";
+  stopBtn.style.display = running ? "block" : "none";
+  singleBtn.disabled = running;
+  serialBtn.disabled = running;
+}
 
-            const val = cleanSN(text);
-            const exists = codes.find(c => cleanSN(c.value) === val);
+async function startModuleScanning() {
+  const scanner = ensureModuleScanner();
+  scanner.setMode(moduleScanMode);
+  document.getElementById("readerModul").innerHTML = "";
+  await scanner.start();
+}
 
-            if (!exists && val) {
-              codes.unshift({ value: val, note: detectModuleType(val) });
-              saveCodes();
-              updateList();
-            }
+async function stopModuleScanning() {
+  if (moduleScanner) await moduleScanner.stop();
+  else updateModuleScannerUi(false);
+}
 
-            if ("vibrate" in navigator) navigator.vibrate(200);
-
-            const beep = document.getElementById("beepSound");
-            if (beep) beep.play().catch(() => {});
-          });
-          
-        } else {
-          appAlert("Nie wykryto kamery.", "Kamera");
-          isModuleScanning = false;
-          document.getElementById("startScanModulBtn").style.display = "inline-block";
-          document.getElementById("readerModul").style.display = "none";
-        }
-      }).catch(err => {
-        appAlert("Błąd kamery: " + err, "Kamera");
-        isModuleScanning = false;
-        document.getElementById("startScanModulBtn").style.display = "inline-block";
-        document.getElementById("readerModul").style.display = "none";
-      });
+document.addEventListener("DOMContentLoaded", () => {
+  const savedCodes = localStorage.getItem("codesWZ");
+  if (savedCodes) {
+    try {
+      const parsed = JSON.parse(savedCodes);
+      codes = Array.isArray(parsed) ? parsed.map(it => ({
+        value: cleanSN(it.value ?? it.kod ?? ""),
+        note: (it.note ?? it.typ ?? "").toString().toUpperCase().trim()
+      })) : [];
+      localStorage.setItem("codesWZ", JSON.stringify(codes));
+    } catch {
+      codes = [];
     }
+  }
 
-    function stopModuleScanning() {
-      if (html5QrModul && isModuleScanning) {
-        html5QrModul.stop().then(() => {
-          html5QrModul.clear();
-          isModuleScanning = false;
-          document.getElementById("readerModul").style.display = "none";
-          document.getElementById("startScanModulBtn").style.display = "inline-block";
-        }).catch(err => {
-          console.error("Błąd zatrzymania skanera:", err);
-          isModuleScanning = false;
-          document.getElementById("readerModul").style.display = "none";
-          document.getElementById("startScanModulBtn").style.display = "inline-block";
-        });
-      }
+  updateList();
+
+  const savedParts = localStorage.getItem("partsWZ");
+  if (savedParts) {
+    try {
+      const parsed = JSON.parse(savedParts);
+      listaCzesci = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      listaCzesci = [];
     }
-  </script>
+  }
 
-  <datalist id="typList">
-    <option value="FM">
-    <option value="LQ">
-    <option value="RQ">
-    <option value="XS">
-    <option value="CU">
-    <option value="DUO">
-    <option value="HICU">
-    <option value="HIDUO">
-    <option value="HIUNO">
-    <option value="ODL">
-    <option value="ODR">
-    <option value="FMB">
-    <option value="LQB">
-    <option value="RQB">
-    <option value="CUIND">
-    <option value="EXTIND">
-    <option value="CUOUT">
-    <option value="EXTOUT">
-  </datalist>
+  updatePartsList();
 
-  <script src="autoLogout.js"></script>
+  const login = localStorage.getItem("login") || "brak";
+  const trasa = localStorage.getItem("trasa") || "brak";
+  const przewoznik = localStorage.getItem("przewoznik") || "brak";
+  const tablica = localStorage.getItem("tablica") || "brak";
+  document.getElementById("daneUzytkownika").textContent = `${login}  -  ${trasa}  -  ${przewoznik}  -  ${tablica}`;
+  document.getElementById("searchInput").addEventListener("input", searchParts);
+  setModuleScanMode("single");
+  updateModuleScannerUi(false);
+  loadPartsBase();
+});
+</script>
 
-  <script>
-    function reloadAtMidnight() {
-      const now = new Date();
-      const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0);
+<datalist id="typList">
+  <option value="FM"><option value="LQ"><option value="RQ"><option value="XS">
+  <option value="CU"><option value="DUO"><option value="HICU"><option value="HIDUO">
+  <option value="HIUNO"><option value="ODL"><option value="ODR"><option value="FMB">
+  <option value="LQB"><option value="RQB"><option value="CUIND"><option value="EXTIND">
+  <option value="CUOUT"><option value="EXTOUT">
+</datalist>
 
-      const timeToMidnight = midnight - now;
-
-      setTimeout(() => {
-        window.location.reload(true);
-      }, timeToMidnight);
-    }
-
-    reloadAtMidnight();
-  </script>
-  <script>
+<script>
   history.pushState({ page: "app" }, "", window.location.href);
-
   window.addEventListener("popstate", function () {
+    stopModuleScanning();
     window.location.replace("index.html");
   });
 </script>
