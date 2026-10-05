@@ -223,6 +223,37 @@ function resetSubmissionIdIfNoDraft(operation) {
   }
 }
 
+function parseTransportServerReply_(text, operation) {
+  const raw = String(text || "").trim();
+
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return parsed;
+    }
+  } catch (_) {
+    // Starsza wersja Apps Script zwracała zwykły tekst.
+  }
+
+  const normalized = raw
+    .replace(/[^A-ZĄĆĘŁŃÓŚŹŻ0-9\s.-]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+
+  if (operation === "pz" && normalized.includes("DANE PZ ZAPISANE")) {
+    return { ok: true, documentNumber: "PZ", legacyText: true };
+  }
+
+  if (operation === "wz" && normalized.includes("DANE WZ ZAPISANE")) {
+    return { ok: true, documentNumber: "WZ", legacyText: true };
+  }
+
+  return null;
+}
+
 function installTransportApiGuard() {
   if (window.__transportApiGuardInstalled) return;
   window.__transportApiGuardInstalled = true;
@@ -249,18 +280,13 @@ function installTransportApiGuard() {
     const response = await nativeFetch(input, init);
 
     if (isTransportPost) {
-      let result;
-
-      try {
-        result = JSON.parse(await response.clone().text());
-      } catch (_) {
-        throw new Error("Serwer nie potwierdził poprawnego zapisu. Dane pozostają w aplikacji.");
-      }
+      const replyText = await response.clone().text();
+      const result = parseTransportServerReply_(replyText, operation);
 
       if (!response.ok || !result || result.ok !== true) {
         const message = result && result.error
           ? result.error
-          : "Nie udało się potwierdzić zapisu. Dane pozostają w aplikacji.";
+          : "Serwer nie potwierdził poprawnego zapisu. Dane pozostają w aplikacji.";
         throw new Error(message);
       }
     }
@@ -394,7 +420,8 @@ async function sendTransportDraft_(operation) {
         body: formData
       });
 
-      const result = await response.json();
+      const replyText = await response.text();
+      const result = parseTransportServerReply_(replyText, operation);
 
       if (!result || result.ok !== true) {
         throw new Error(
