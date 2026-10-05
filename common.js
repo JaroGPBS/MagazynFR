@@ -372,22 +372,65 @@ function clearTransportDraft_(operation) {
   localStorage.removeItem(SUBMISSION_ID_PREFIX + operation);
 }
 
+function waitTransport_(ms) {
+  return new Promise(resolve => window.setTimeout(resolve, ms));
+}
+
 async function sendTransportDraft_(operation) {
   const formData = buildTransportFormData_(operation);
   if (!formData) return null;
 
-  const response = await fetch(TRANSPORT_API_URL, {
-    method: "POST",
-    body: formData
-  });
-
-  const result = await response.json();
-  if (!result || result.ok !== true) {
-    throw new Error(result && result.error ? result.error : `Nie udało się zapisać ${operation.toUpperCase()}.`);
+  const button = document.querySelector(".session-end-btn");
+  if (button) {
+    button.textContent = operation === "pz" ? "Wysyłam PZ..." : "Wysyłam WZ...";
   }
 
-  clearTransportDraft_(operation);
-  return result;
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(TRANSPORT_API_URL, {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (!result || result.ok !== true) {
+        throw new Error(
+          result && result.error
+            ? result.error
+            : `Nie udało się zapisać ${operation.toUpperCase()}.`
+        );
+      }
+
+      clearTransportDraft_(operation);
+
+      // Po PZ backend wykonał już SpreadsheetApp.flush().
+      // Krótka przerwa daje pewność, że następne WZ startuje
+      // dopiero po pełnym zakończeniu aktualizacji stanów.
+      if (operation === "pz") {
+        await waitTransport_(1500);
+      }
+
+      return result;
+
+    } catch (err) {
+      lastError = err;
+
+      if (attempt === 0) {
+        // Dokument mógł zostać zapisany mimo utraty odpowiedzi.
+        // Ponawiamy z tym samym submissionId. Backend rozpoznaje
+        // duplikat i zwraca istniejący numer zamiast tworzyć drugi.
+        await waitTransport_(1800);
+        continue;
+      }
+
+      throw err;
+    }
+  }
+
+  throw lastError || new Error(`Nie udało się zapisać ${operation.toUpperCase()}.`);
 }
 
 function clearFinishedTransportSession_() {
