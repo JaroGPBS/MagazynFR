@@ -905,17 +905,59 @@ function goBack() {
       formData.append("czesci", JSON.stringify(listaCzesci));
 
       fetch(scriptURL, { method: "POST", body: formData })
-        .then(res => res.text())
-        .then(async txt => {
-          await appAlert("✅ Inwentaryzacja wysłana.", "Gotowe");
+        .then(async res => {
+          const txt = await res.text();
+          let data = null;
+
+          try {
+            data = JSON.parse(txt);
+          } catch (_) {
+            // Obsługa starszej odpowiedzi tekstowej z Apps Script.
+          }
+
+          if (!res.ok) {
+            throw new Error(
+              data && data.error
+                ? data.error
+                : (txt || "Nie udało się zapisać inwentaryzacji.")
+            );
+          }
+
+          if (data) {
+            if (data.ok !== true) {
+              throw new Error(data.error || "Nie udało się zapisać inwentaryzacji.");
+            }
+
+            return data;
+          }
+
+          if (!String(txt || "").includes("Inwentaryzacja zapisana")) {
+            throw new Error(txt || "Serwer nie potwierdził zapisu inwentaryzacji.");
+          }
+
+          return { ok: true, added: [] };
+        })
+        .then(async data => {
+          const added = Array.isArray(data.added) ? data.added : [];
+
+          let message = "✅ Inwentaryzacja wysłana.";
+
+          if (added.length > 0) {
+            message += "\n\nDodano nowe pozycje:\n" + added.join("\n");
+          }
+
+          await appAlert(message, "Gotowe");
+
           listaCzesci = [];
           localStorage.removeItem("inwentaryzacjaLista");
           updateList();
           window.location.href = "index.html";
         })
-        .catch(err => {
+        .catch(async err => {
           document.getElementById("sendingOverlay").style.display = "none";
-          document.getElementById("status").innerText = "❌ Błąd: " + err;
+          const message = err && err.message ? err.message : String(err);
+          document.getElementById("status").innerText = "❌ Błąd: " + message;
+          await appAlert("❌ " + message, "Błąd");
         });
     }
 
