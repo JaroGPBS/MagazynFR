@@ -882,83 +882,175 @@ function goBack() {
       return bazaCzesci.find(part => String(part.indeks || "").trim().toUpperCase() === val);
     }
 
+
+    // Identyfikator wysyłki jest utrzymywany na telefonie do czasu
+    // pełnego potwierdzenia. Ponowne kliknięcie używa TEGO SAMEGO ID.
+    const INVENTORY_SEND_KEY = "inwentaryzacjaWysylka_v1";
+    let inventorySendInProgress = false;
+
+    function inventoryDraftFingerprint_(items) {
+      return JSON.stringify(items.map(item => ({
+        indeks: String(item.indeks || "").trim().toUpperCase(),
+        nazwa: String(item.nazwa || "").trim(),
+        ilosc: Number(item.ilosc)
+      })).sort((a, b) => a.indeks.localeCompare(b.indeks)));
+    }
+
+    function inventorySubmissionId_(fingerprint) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(INVENTORY_SEND_KEY) || "null");
+        if (saved && saved.fingerprint === fingerprint && saved.id) {
+          return saved.id;
+        }
+      } catch (_) {}
+
+      const id = "INV-" + (
+        window.crypto && window.crypto.randomUUID
+          ? window.crypto.randomUUID()
+          : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+      );
+
+      localStorage.setItem(INVENTORY_SEND_KEY, JSON.stringify({ id, fingerprint }));
+      return id;
+    }
+
+    async function readInventoryReply_(response) {
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (_) {
+        throw new Error("Serwer nie zwrócił potwierdzenia JSON. Odpowiedź: " + text.slice(0, 180));
+      }
+
+      if (!response.ok || !data || data.ok !== true) {
+        throw new Error(data && data.error ? data.error : "Nie udało się potwierdzić zapisu.");
+      }
+      return data;
+    }
+
+    // GET służy WYŁĄCZNIE do odczytania statusu na serwerze.
+    // Nie wykonuje kolejnego zapisu i nie może zdublować inwentaryzacji.
+    async function recoverInventoryReceipt_(id, expectedCount) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 1000 + attempt * 1000));
+
+        try {
+          const url = scriptURL +
+            "?akcja=statusInwentaryzacji&submissionId=" + encodeURIComponent(id) +
+            "&_=" + Date.now();
+
+          const response = await fetch(url, { cache: "no-store" });
+          const status = await readInventoryReply_(response);
+
+          if (status.found === true &&
+              status.submissionId === id &&
+              Number(status.savedCount) === expectedCount) {
+            return status;
+          }
+        } catch (error) {
+          console.warn("Sprawdzanie potwierdzenia Inwentaryzacji:", error);
+        }
+      }
+      return null;
+    }
+
     async function sendData() {
+      if (inventorySendInProgress) return;
+
       if (listaCzesci.length === 0) {
         await appAlert("Lista inwentaryzacji jest pusta.", "Błąd");
         return;
       }
 
       for (const item of listaCzesci) {
-        const qty = Number(item.ilosc || 0);
-        if (!qty || qty <= 0) {
-          await appAlert("Każda część musi mieć wpisaną ilość większą od 0.", "Błąd");
+        const quantity = Number(item.ilosc);
+        if (!item.indeks || !Number.isFinite(quantity) || quantity <= 0) {
+          await appAlert("Każda część musi mieć indeks i ilość większą od 0.", "Błąd");
           return;
         }
       }
 
       if (!(await appConfirm("Czy na pewno wysłać inwentaryzację?", "Wysyłanie inwentaryzacji"))) return;
 
-      document.getElementById("sendingOverlay").style.display = "flex";
+      const items = listaCzesci.map(item => ({
+        indeks: String(item.indeks || "").trim().toUpperCase(),
+        nazwa: String(item.nazwa || "").trim(),
+        ilosc: Number(item.ilosc)
+      }));
 
+      const fingerprint = inventoryDraftFingerprint_(items);
+      const submissionId = inventorySubmissionId_(fingerprint);
       const formData = new FormData();
       formData.append("strona", "inwentaryzacja");
-      formData.append("czesci", JSON.stringify(listaCzesci));
+      formData.append("czesci", JSON.stringify(items));
+      formData.append("submissionId", submissionId);
 
-      fetch(scriptURL, { method: "POST", body: formData })
-        .then(async res => {
-          const txt = await res.text();
-          let data = null;
+      const button = document.getElementById("sendBtn");
+      const overlay = document.getElementById("sendingOverlay");
+      inventorySendInProgress = true;
+      if (button) button.disabled = true;
+      if (overlay) overlay.style.display = "flex";
 
+      let receipt = null;
+      let firstError = null;
+
+      try {
+        // JEDEN POST. Nie ponawiamy zapisu, gdy nie wiemy, czy już się udał.
+        try {
+          const response = await fetch(scriptURL, { method: "POST", body: formData });
+          const result = await readInventoryReply_(response);
+
+          if (result.submissionId !== submissionId ||
+              Number(result.savedCount) !== items.length) {
+            throw new Error("Serwer nie potwierdził pełnej wysyłki tym samym ID.");
+          }
+
+          receipt = result;
+        } catch (error) {
+          firstError = error;
+          // Zamiast ponownie wysyłać, pytamy serwer o poprzedni zapis.
+          receipt = await recoverInventoryReceipt_(submissionId, items.length);
+        }
+
+        if (!receipt) {
+          const reason = firstError && firstError.message ? firstError.message : "Brak odpowiedzi serwera.";
+          const message = "Nie można jednoznacznie potwierdzić zapisu.\n\n" +
+            reason + "\n\nLista pozostała zapisana w aplikacji. " +
+            "Nie wysyłaj jej ponownie bez sprawdzenia arkusza.";
+          document.getElementById("status").innerText = "⚠️ Brak potwierdzenia inwentaryzacji.";
+          if (overlay) overlay.style.display = "none";
+          await appAlert(message, "Sprawdź zapis");
+          return;
+        }
+
+        // Dane i potwierdzenie są zgodne: dopiero teraz kasujemy szkic.
+        listaCzesci = [];
+        localStorage.removeItem("inwentaryzacjaLista");
+        const current = localStorage.getItem(INVENTORY_SEND_KEY);
+        if (current) {
           try {
-            data = JSON.parse(txt);
-          } catch (_) {
-            // Obsługa starszej odpowiedzi tekstowej z Apps Script.
-          }
-
-          if (!res.ok) {
-            throw new Error(
-              data && data.error
-                ? data.error
-                : (txt || "Nie udało się zapisać inwentaryzacji.")
-            );
-          }
-
-          if (data) {
-            if (data.ok !== true) {
-              throw new Error(data.error || "Nie udało się zapisać inwentaryzacji.");
+            if (JSON.parse(current).id === submissionId) {
+              localStorage.removeItem(INVENTORY_SEND_KEY);
             }
+          } catch (_) {}
+        }
+        updateList();
 
-            return data;
-          }
+        if (overlay) overlay.style.display = "none";
+        const added = Array.isArray(receipt.added) ? receipt.added : [];
+        let message = "✅ Inwentaryzacja wysłana i potwierdzona.";
+        if (added.length) {
+          message += "\n\nDodano nowe pozycje:\n" + added.join("\n");
+        }
 
-          if (!String(txt || "").includes("Inwentaryzacja zapisana")) {
-            throw new Error(txt || "Serwer nie potwierdził zapisu inwentaryzacji.");
-          }
-
-          return { ok: true, added: [] };
-        })
-        .then(async data => {
-          const added = Array.isArray(data.added) ? data.added : [];
-
-          let message = "✅ Inwentaryzacja wysłana.";
-
-          if (added.length > 0) {
-            message += "\n\nDodano nowe pozycje:\n" + added.join("\n");
-          }
-
-          await appAlert(message, "Gotowe");
-
-          listaCzesci = [];
-          localStorage.removeItem("inwentaryzacjaLista");
-          updateList();
-          window.location.href = "index.html";
-        })
-        .catch(async err => {
-          document.getElementById("sendingOverlay").style.display = "none";
-          const message = err && err.message ? err.message : String(err);
-          document.getElementById("status").innerText = "❌ Błąd: " + message;
-          await appAlert("❌ " + message, "Błąd");
-        });
+        await appAlert(message, "Gotowe");
+        window.location.href = "index.html";
+      } finally {
+        inventorySendInProgress = false;
+        if (overlay) overlay.style.display = "none";
+        if (button) button.disabled = false;
+      }
     }
 
     function startScanning() {
